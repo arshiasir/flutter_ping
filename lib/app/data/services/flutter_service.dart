@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:get/get.dart';
 import 'package:process_run/process_run.dart';
 import '../models/system_info_model.dart';
