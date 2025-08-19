@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+    tags:
+      - 'v*'
   workflow_dispatch:
 
 jobs:
@@ -57,3 +59,188 @@ jobs:
         with:
           name: macos-build
           path: build/macos/Build/Products/Release/*
+
+  create-installers:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+      
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.35.1'
+      
+      - name: Install dependencies
+        run: flutter pub get
+      
+      - name: Create Windows EXE installer
+        run: |
+          mkdir -p installers
+          # Install NSIS for creating Windows installers
+          sudo apt-get update -y
+          sudo apt-get install -y nsis
+          
+          # Create NSIS script for Windows installer
+          cat > installers/installer.nsi << 'EOF'
+          !define APPNAME "Flutter Ping"
+          !define COMPANYNAME "Your Company"
+          !define DESCRIPTION "A Flutter network ping application"
+          !define VERSIONMAJOR 1
+          !define VERSIONMINOR 0
+          !define VERSIONBUILD 0
+          !define HELPURL "https://github.com/yourusername/flutter_ping"
+          !define UPDATEURL "https://github.com/yourusername/flutter_ping"
+          !define ABOUTURL "https://github.com/yourusername/flutter_ping"
+          !define INSTALLSIZE 50000
+          
+          RequestExecutionLevel admin
+          InstallDir "$PROGRAMFILES\${APPNAME}"
+          InstallDirRegKey HKCU "Software\${APPNAME}" ""
+          
+          !include "MUI2.nsh"
+          
+          Name "${APPNAME}"
+          Icon "artifacts/windows-build/flutter_ping.exe"
+          OutFile "flutter-ping-windows-installer.exe"
+          
+          !define MUI_ABORTWARNING
+          !define MUI_ICON "artifacts/windows-build/flutter_ping.exe"
+          !define MUI_UNICON "artifacts/windows-build/flutter_ping.exe"
+          
+          !insertmacro MUI_PAGE_WELCOME
+          !insertmacro MUI_PAGE_LICENSE "LICENSE"
+          !insertmacro MUI_PAGE_DIRECTORY
+          !insertmacro MUI_PAGE_INSTFILES
+          !insertmacro MUI_PAGE_FINISH
+          
+          !insertmacro MUI_UNPAGE_CONFIRM
+          !insertmacro MUI_UNPAGE_INSTFILES
+          
+          !insertmacro MUI_LANGUAGE "English"
+          
+          Section "MainApplication" SEC_ID
+            SetOutPath "$INSTDIR"
+            File /r "artifacts/windows-build\*.*"
+            
+            WriteUninstaller "$INSTDIR\uninstall.exe"
+            
+            CreateDirectory "$SMPROGRAMS\${APPNAME}"
+            CreateShortCut "$SMPROGRAMS\${APPNAME}\${APPNAME}.lnk" "$INSTDIR\flutter_ping.exe"
+            CreateShortCut "$SMPROGRAMS\${APPNAME}\Uninstall.lnk" "$INSTDIR\uninstall.exe"
+            
+            WriteRegStr HKCU "Software\${APPNAME}" "" $INSTDIR
+            WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPNAME}" "DisplayName" "${APPNAME}"
+            WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPNAME}" "UninstallString" "$\"$INSTDIR\uninstall.exe$\""
+            WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPNAME}" "QuietUninstallString" "$\"$INSTDIR\uninstall.exe$\" /S"
+            WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPNAME}" "InstallLocation" "$\"$INSTDIR$\""
+            WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPNAME}" "DisplayIcon" "$\"$INSTDIR\flutter_ping.exe$\""
+            WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPNAME}" "Publisher" "$\"${COMPANYNAME}$\""
+            WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPNAME}" "DisplayVersion" "$\"${VERSIONMAJOR}.${VERSIONMINOR}.${VERSIONBUILD}$\""
+            WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPNAME}" "VersionMajor" ${VERSIONMAJOR}
+            WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPNAME}" "VersionMinor" ${VERSIONMINOR}
+            WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPNAME}" "VersionBuild" ${VERSIONBUILD}
+            WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPNAME}" "EstimatedSize" ${INSTALLSIZE}
+            WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPNAME}" "NoModify" 1
+            WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPNAME}" "NoRepair" 1
+          SectionEnd
+          
+          Section "Uninstall"
+            Delete "$INSTDIR\uninstall.exe"
+            RMDir /r "$INSTDIR"
+            
+            Delete "$SMPROGRAMS\${APPNAME}\${APPNAME}.lnk"
+            Delete "$SMPROGRAMS\${APPNAME}\Uninstall.lnk"
+            RMDir "$SMPROGRAMS\${APPNAME}"
+            
+            DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPNAME}"
+            DeleteRegKey HKCU "Software\${APPNAME}"
+          SectionEnd
+          EOF
+          
+          # Create Windows installer
+          makensis installers/installer.nsi
+          mv flutter-ping-windows-installer.exe installers/
+      
+      - name: Create Linux DEB package
+        run: |
+          # Install dpkg-deb for creating DEB packages
+          sudo apt-get update -y
+          sudo apt-get install -y dpkg-dev
+          
+          # Create DEB package structure
+          mkdir -p flutter-ping_1.0.0_amd64/DEBIAN
+          mkdir -p flutter-ping_1.0.0_amd64/usr/bin
+          mkdir -p flutter-ping_1.0.0_amd64/usr/share/applications
+          mkdir -p flutter-ping_1.0.0_amd64/usr/share/icons/hicolor/256x256/apps
+          
+          # Copy application files
+          cp -r artifacts/linux-build/* flutter-ping_1.0.0_amd64/usr/bin/
+          
+          # Create control file
+          cat > flutter-ping_1.0.0_amd64/DEBIAN/control << 'EOF'
+          Package: flutter-ping
+          Version: 1.0.0
+          Section: utils
+          Priority: optional
+          Architecture: amd64
+          Depends: libc6
+          Maintainer: Your Name <your.email@example.com>
+          Description: A Flutter network ping application
+           Flutter Ping is a modern network utility application
+           built with Flutter for cross-platform compatibility.
+          EOF
+          
+          # Create desktop file
+          cat > flutter-ping_1.0.0_amd64/usr/share/applications/flutter-ping.desktop << 'EOF'
+          [Desktop Entry]
+          Name=Flutter Ping
+          Comment=A Flutter network ping application
+          Exec=/usr/bin/flutter_ping
+          Icon=flutter-ping
+          Terminal=false
+          Type=Application
+          Categories=Network;Utility;
+          EOF
+          
+          # Create DEB package
+          dpkg-deb --build flutter-ping_1.0.0_amd64
+          mv flutter-ping_1.0.0_amd64.deb installers/flutter-ping-linux.deb
+      
+      - name: Create macOS DMG
+        run: |
+          # Install create-dmg for creating DMG files
+          sudo apt-get update -y
+          sudo apt-get install -y create-dmg
+          
+          # Create DMG
+          create-dmg \
+            --volname "Flutter Ping" \
+            --volicon "artifacts/macos-build/Flutter Ping.app/Contents/Resources/AppIcon.icns" \
+            --window-pos 200 120 \
+            --window-size 600 300 \
+            --icon-size 100 \
+            --icon "Flutter Ping.app" 175 120 \
+            --hide-extension "Flutter Ping.app" \
+            --app-drop-link 425 120 \
+            "installers/flutter-ping-macos.dmg" \
+            "artifacts/macos-build/"
+      
+      - name: Create release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            installers/flutter-ping-windows-installer.exe
+            installers/flutter-ping-linux.deb
+            installers/flutter-ping-macos.dmg
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
