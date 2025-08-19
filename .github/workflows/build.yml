@@ -37,11 +37,23 @@ jobs:
             flutter build windows --release
           fi
 
-      - name: Upload artifacts
+      - name: Upload Windows build
+        if: matrix.os == 'windows-latest'
         uses: actions/upload-artifact@v4
         with:
-          name: build-${{ matrix.os }}
-          path: |
-            build/windows/runner/Release/*
-            build/linux/x64/release/bundle/*
-            build/macos/Build/Products/Release/*
+          name: windows-build
+          path: build/windows/runner/Release/*
+
+      - name: Upload Linux build
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-build
+          path: build/linux/x64/release/bundle/*
+
+      - name: Upload macOS build
+        if: matrix.os == 'macos-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-build
+          path: build/macos/Build/Products/Release/*
