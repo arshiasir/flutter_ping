@@ -5,20 +5,21 @@ import '../models/url_model.dart';
 
 class FlutterService extends GetxService {
   static FlutterService get instance => Get.find<FlutterService>();
-  
+
   final Shell __shell = Shell();
 
   Future<FlutterInfo> getFlutterVersion() async {
     try {
       final result = await _shell.run('flutter --version');
-      
+
       if (result.isNotEmpty && result.first.exitCode == 0) {
         final output = result.first.stdout.toString();
         return _parseFlutterVersion(output);
       } else {
         return FlutterInfo(
           isInstalled: false,
-          errorMessage: 'Flutter command failed: ${result.isNotEmpty ? result.first.stderr : 'No output'}',
+          errorMessage:
+              'Flutter command failed: ${result.isNotEmpty ? result.first.stderr : 'No output'}',
         );
       }
     } catch (e) {
@@ -49,7 +50,10 @@ class FlutterService extends GetxService {
       } else if (trimmed.startsWith('Engine •')) {
         engine = trimmed.replaceFirst('Engine • revision ', '');
       } else if (trimmed.startsWith('Tools •')) {
-        dartVersion = trimmed.replaceFirst('Tools • Dart ', '').split(' ').first;
+        dartVersion = trimmed
+            .replaceFirst('Tools • Dart ', '')
+            .split(' ')
+            .first;
       }
     }
 
@@ -67,10 +71,12 @@ class FlutterService extends GetxService {
     try {
       final result = await _shell.run('flutter doctor -v');
       final output = result.first.stdout.toString();
-      
+
       final issues = _parseDoctorOutput(output);
-      final isHealthy = issues.where((issue) => issue.severity == 'error').isEmpty;
-      
+      final isHealthy = issues
+          .where((issue) => issue.severity == 'error')
+          .isEmpty;
+
       return FlutterDoctorResult(
         isHealthy: isHealthy,
         issues: issues,
@@ -89,10 +95,10 @@ class FlutterService extends GetxService {
   List<DoctorIssue> _parseDoctorOutput(String output) {
     final issues = <DoctorIssue>[];
     final lines = output.split('\n');
-    
+
     for (int i = 0; i < lines.length; i++) {
       final line = lines[i].trim();
-      
+
       if (line.startsWith('[✓]')) {
         // Success case - can be ignored or marked as info
         continue;
@@ -100,7 +106,7 @@ class FlutterService extends GetxService {
         // Error case
         final title = line.replaceFirst('[✗] ', '');
         final details = <String>[];
-        
+
         // Collect details from following lines
         for (int j = i + 1; j < lines.length && j < i + 10; j++) {
           final detailLine = lines[j].trim();
@@ -109,19 +115,22 @@ class FlutterService extends GetxService {
             details.add(detailLine);
           }
         }
-        
-        issues.add(DoctorIssue(
-          category: 'Error',
-          title: title,
-          description: 'This component has critical issues that need to be resolved.',
-          severity: 'error',
-          details: details,
-        ));
+
+        issues.add(
+          DoctorIssue(
+            category: 'Error',
+            title: title,
+            description:
+                'This component has critical issues that need to be resolved.',
+            severity: 'error',
+            details: details,
+          ),
+        );
       } else if (line.startsWith('[!]')) {
         // Warning case
         final title = line.replaceFirst('[!] ', '');
         final details = <String>[];
-        
+
         for (int j = i + 1; j < lines.length && j < i + 10; j++) {
           final detailLine = lines[j].trim();
           if (detailLine.startsWith('[') || detailLine.isEmpty) break;
@@ -129,17 +138,20 @@ class FlutterService extends GetxService {
             details.add(detailLine);
           }
         }
-        
-        issues.add(DoctorIssue(
-          category: 'Warning',
-          title: title,
-          description: 'This component has warnings that should be addressed.',
-          severity: 'warning',
-          details: details,
-        ));
+
+        issues.add(
+          DoctorIssue(
+            category: 'Warning',
+            title: title,
+            description:
+                'This component has warnings that should be addressed.',
+            severity: 'warning',
+            details: details,
+          ),
+        );
       }
     }
-    
+
     return issues;
   }
 
@@ -147,7 +159,7 @@ class FlutterService extends GetxService {
     try {
       final result = await _shell.run('flutter upgrade --dry-run');
       final output = result.first.stdout.toString();
-      
+
       if (output.contains('Flutter is already up to date')) {
         return CheckResult(
           name: 'Flutter Updates',
@@ -187,13 +199,13 @@ class FlutterService extends GetxService {
   Future<List<PubPackageInfo>> checkPubOutdated() async {
     try {
       final result = await _shell.run('flutter pub outdated --json');
-      
+
       if (result.isEmpty || result.first.exitCode != 0) {
         // Try without --json flag
         final fallbackResult = await _shell.run('flutter pub outdated');
         return _parsePubOutdatedText(fallbackResult.first.stdout.toString());
       }
-      
+
       // Parse JSON output if available
       return _parsePubOutdatedJson(result.first.stdout.toString());
     } catch (e) {
@@ -210,20 +222,24 @@ class FlutterService extends GetxService {
   List<PubPackageInfo> _parsePubOutdatedText(String textOutput) {
     final packages = <PubPackageInfo>[];
     final lines = textOutput.split('\n');
-    
+
     for (final line in lines) {
       // Parse lines like: "package_name  1.0.0  1.1.0  1.1.0"
       final parts = line.trim().split(RegExp(r'\s+'));
-      if (parts.length >= 3 && !parts[0].startsWith('Package') && parts[0].isNotEmpty) {
-        packages.add(PubPackageInfo(
-          name: parts[0],
-          currentVersion: parts[1],
-          latestVersion: parts.length > 2 ? parts[2] : null,
-          isOutdated: parts.length > 2 && parts[1] != parts[2],
-        ));
+      if (parts.length >= 3 &&
+          !parts[0].startsWith('Package') &&
+          parts[0].isNotEmpty) {
+        packages.add(
+          PubPackageInfo(
+            name: parts[0],
+            currentVersion: parts[1],
+            latestVersion: parts.length > 2 ? parts[2] : null,
+            isOutdated: parts.length > 2 && parts[1] != parts[2],
+          ),
+        );
       }
     }
-    
+
     return packages;
   }
 }
