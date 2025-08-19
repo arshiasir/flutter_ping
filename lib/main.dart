@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'app/ui/theme.dart';
 import 'app/routes/app_pages.dart';
 import 'app/data/services/network_service.dart';
@@ -12,6 +13,16 @@ void main() {
   _initializeServices();
 
   runApp(const FlutterPingApp());
+
+  // Configure bitsdojo_window for desktop platforms
+  doWhenWindowReady(() {
+    const initialSize = Size(1280, 720);
+    appWindow.minSize = initialSize;
+    appWindow.size = initialSize;
+    appWindow.alignment = Alignment.center;
+    appWindow.title = "Flutter Ping";
+    appWindow.show();
+  });
 }
 
 void _initializeServices() {
