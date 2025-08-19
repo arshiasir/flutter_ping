@@ -1,11 +1,11 @@
 {
-    "name": "flutter_ping",
-    "short_name": "flutter_ping",
+    "name": "Flutter Ping",
+    "short_name": "Flutter Ping",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#hexcode",
     "theme_color": "#hexcode",
-    "description": "A new Flutter project.",
+    "description": "A Flutter Ping application for network diagnostics.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
