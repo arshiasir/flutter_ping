@@ -173,24 +173,30 @@ class HomePage extends GetView<HomeController> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Row(
-              children: [
-                Icon(Icons.wifi, size: 24, color: AppTheme.primaryColor),
-                const SizedBox(width: 12),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Network Connectivity',
-                      style: Get.theme.textTheme.headlineSmall,
+            Expanded(
+              child: Row(
+                children: [
+                  Icon(Icons.wifi, size: 24, color: AppTheme.primaryColor),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Network Connectivity',
+                          style: Get.theme.textTheme.headlineSmall,
+                        ),
+                        Text(
+                          'Testing access to essential Flutter development resources',
+                          style: Get.theme.textTheme.bodySmall,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
                     ),
-                    Text(
-                      'Testing access to essential Flutter development resources',
-                      style: Get.theme.textTheme.bodySmall,
-                    ),
-                  ],
-                ),
-              ],
+                  ),
+                ],
+              ),
             ),
             IconButton(
               onPressed: () => controller.isVersionManagerOpen.value =
