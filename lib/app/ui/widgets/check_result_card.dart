@@ -32,10 +32,7 @@ class CheckResultCard extends StatelessWidget {
           status: status,
           animate: status == CheckStatus.running,
         ),
-        title: Text(
-          title,
-          style: Theme.of(context).textTheme.titleMedium,
-        ),
+        title: Text(title, style: Theme.of(context).textTheme.titleMedium),
         subtitle: Text(
           description,
           style: Theme.of(context).textTheme.bodySmall,
@@ -54,9 +51,7 @@ class CheckResultCard extends StatelessWidget {
             const Icon(Icons.expand_more),
           ],
         ),
-        children: [
-          if (showDetails) _buildDetailsSection(context),
-        ],
+        children: [if (showDetails) _buildDetailsSection(context)],
       ),
     );
   }
@@ -68,10 +63,7 @@ class CheckResultCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (details != null) ...[
-            Text(
-              'Details:',
-              style: Theme.of(context).textTheme.titleSmall,
-            ),
+            Text('Details:', style: Theme.of(context).textTheme.titleSmall),
             const SizedBox(height: 8),
             Container(
               width: double.infinity,
@@ -80,14 +72,14 @@ class CheckResultCard extends StatelessWidget {
                 color: AppTheme.elevatedSurface,
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                  color: AppTheme.textTertiary.withOpacity(0.3),
+                  color: AppTheme.textTertiary.withValues(alpha: 0.3),
                 ),
               ),
               child: SelectableText(
                 details!,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  fontFamily: 'monospace',
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(fontFamily: 'monospace'),
               ),
             ),
             const SizedBox(height: 12),
@@ -106,24 +98,24 @@ class CheckResultCard extends StatelessWidget {
               ],
             ),
           ],
-          
+
           if (errorMessage != null) ...[
             if (details != null) const SizedBox(height: 16),
             Text(
               'Error:',
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                color: AppTheme.error,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(color: AppTheme.error),
             ),
             const SizedBox(height: 8),
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: AppTheme.error.withOpacity(0.1),
+                color: AppTheme.error.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                  color: AppTheme.error.withOpacity(0.3),
+                  color: AppTheme.error.withValues(alpha: 0.3),
                 ),
               ),
               child: SelectableText(
@@ -142,7 +134,7 @@ class CheckResultCard extends StatelessWidget {
                   icon: const Icon(Icons.copy, size: 16),
                   label: const Text('Copy Error'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.error.withOpacity(0.1),
+                    backgroundColor: AppTheme.error.withValues(alpha: 0.1),
                     foregroundColor: AppTheme.error,
                     elevation: 0,
                   ),
@@ -182,11 +174,7 @@ class NetworkCheckCard extends StatelessWidget {
   final NetworkCheckItem item;
   final VoidCallback? onRetry;
 
-  const NetworkCheckCard({
-    super.key,
-    required this.item,
-    this.onRetry,
-  });
+  const NetworkCheckCard({super.key, required this.item, this.onRetry});
 
   @override
   Widget build(BuildContext context) {
@@ -203,24 +191,28 @@ class NetworkCheckCard extends StatelessWidget {
   String _buildNetworkDetails() {
     final buffer = StringBuffer();
     buffer.writeln('URL: ${item.url}');
-    
+
     if (item.httpCode != null) {
       buffer.writeln('HTTP Status: ${item.httpCode}');
     }
-    
+
     buffer.writeln('Status: ${item.status.name.toUpperCase()}');
-    
+
     if (item.status == CheckStatus.success) {
-      buffer.writeln('\n✅ This endpoint is accessible and responding correctly.');
+      buffer.writeln(
+        '\n✅ This endpoint is accessible and responding correctly.',
+      );
     } else if (item.status == CheckStatus.warning) {
-      buffer.writeln('\n⚠️ This endpoint responded but with a non-200 status code.');
+      buffer.writeln(
+        '\n⚠️ This endpoint responded but with a non-200 status code.',
+      );
     } else if (item.status == CheckStatus.failed) {
       buffer.writeln('\n❌ This endpoint is not accessible. This may affect:');
       buffer.writeln('  • Package downloads and updates');
       buffer.writeln('  • Build processes');
       buffer.writeln('  • Development tool functionality');
     }
-    
+
     return buffer.toString();
   }
 }

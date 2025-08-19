@@ -42,11 +42,7 @@ class StatusIndicator extends StatelessWidget {
         break;
     }
 
-    Widget iconWidget = Icon(
-      icon,
-      color: color,
-      size: size,
-    );
+    Widget iconWidget = Icon(icon, color: color, size: size);
 
     if (animate && status == CheckStatus.running) {
       iconWidget = AnimatedRotation(
@@ -80,27 +76,27 @@ class StatusBadge extends StatelessWidget {
 
     switch (status) {
       case CheckStatus.success:
-        backgroundColor = AppTheme.success.withOpacity(0.1);
+        backgroundColor = AppTheme.success.withValues(alpha: 0.1);
         textColor = AppTheme.success;
         displayText = text ?? 'SUCCESS';
         break;
       case CheckStatus.failed:
-        backgroundColor = AppTheme.error.withOpacity(0.1);
+        backgroundColor = AppTheme.error.withValues(alpha: 0.1);
         textColor = AppTheme.error;
         displayText = text ?? 'FAILED';
         break;
       case CheckStatus.warning:
-        backgroundColor = AppTheme.warning.withOpacity(0.1);
+        backgroundColor = AppTheme.warning.withValues(alpha: 0.1);
         textColor = AppTheme.warning;
         displayText = text ?? 'WARNING';
         break;
       case CheckStatus.running:
-        backgroundColor = AppTheme.info.withOpacity(0.1);
+        backgroundColor = AppTheme.info.withValues(alpha: 0.1);
         textColor = AppTheme.info;
         displayText = text ?? 'RUNNING';
         break;
       case CheckStatus.pending:
-        backgroundColor = AppTheme.textTertiary.withOpacity(0.1);
+        backgroundColor = AppTheme.textTertiary.withValues(alpha: 0.1);
         textColor = AppTheme.textTertiary;
         displayText = text ?? 'PENDING';
         break;
@@ -111,7 +107,7 @@ class StatusBadge extends StatelessWidget {
       decoration: BoxDecoration(
         color: backgroundColor,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: textColor.withOpacity(0.3)),
+        border: Border.all(color: textColor.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

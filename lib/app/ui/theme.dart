@@ -6,29 +6,29 @@ class AppTheme {
   static const Color primaryVariant = Color(0xFF5A52D5);
   static const Color secondary = Color(0xFF03DAC6);
   static const Color secondaryVariant = Color(0xFF018786);
-  
+
   // Background colors
   static const Color backgroundDark = Color(0xFF121212);
   static const Color surfaceDark = Color(0xFF1E1E1E);
   static const Color cardDark = Color(0xFF2D2D2D);
   static const Color elevatedSurface = Color(0xFF3A3A3A);
-  
+
   // Status colors
   static const Color success = Color(0xFF4CAF50);
   static const Color warning = Color(0xFFFF9800);
   static const Color error = Color(0xFFF44336);
   static const Color info = Color(0xFF2196F3);
-  
+
   // Text colors
   static const Color textPrimary = Color(0xFFFFFFFF);
   static const Color textSecondary = Color(0xFFBBBBBB);
   static const Color textTertiary = Color(0xFF888888);
-  
+
   static ThemeData get darkTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
-      
+
       // Color scheme
       colorScheme: const ColorScheme.dark(
         primary: primaryColor,
@@ -36,15 +36,13 @@ class AppTheme {
         secondary: secondary,
         secondaryContainer: secondaryVariant,
         surface: surfaceDark,
-        background: backgroundDark,
         error: error,
         onPrimary: Colors.white,
         onSecondary: Colors.black,
         onSurface: textPrimary,
-        onBackground: textPrimary,
         onError: Colors.white,
       ),
-      
+
       // App bar theme
       appBarTheme: const AppBarTheme(
         backgroundColor: surfaceDark,
@@ -57,64 +55,53 @@ class AppTheme {
           color: textPrimary,
         ),
       ),
-      
+
       // Card theme
       cardTheme: CardThemeData(
         color: cardDark,
         elevation: 4,
-        shadowColor: Colors.black.withOpacity(0.3),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shadowColor: Colors.black.withValues(alpha: 0.3),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
-      
+
       // Elevated button theme
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: primaryColor,
           foregroundColor: Colors.white,
           elevation: 2,
-          shadowColor: primaryColor.withOpacity(0.3),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
+          shadowColor: primaryColor.withValues(alpha: 0.3),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
         ),
       ),
-      
+
       // Text button theme
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: primaryColor,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
       ),
-      
+
       // Outlined button theme
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: primaryColor,
           side: const BorderSide(color: primaryColor),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
       ),
-      
+
       // Icon theme
-      iconTheme: const IconThemeData(
-        color: textSecondary,
-        size: 24,
-      ),
-      
+      iconTheme: const IconThemeData(color: textSecondary, size: 24),
+
       // Progress indicator theme
       progressIndicatorTheme: const ProgressIndicatorThemeData(
         color: primaryColor,
         linearTrackColor: elevatedSurface,
       ),
-      
+
       // List tile theme
       listTileTheme: const ListTileThemeData(
         textColor: textPrimary,
@@ -124,13 +111,13 @@ class AppTheme {
           borderRadius: BorderRadius.all(Radius.circular(8)),
         ),
       ),
-      
+
       // Divider theme
       dividerTheme: DividerThemeData(
-        color: textTertiary.withOpacity(0.3),
+        color: textTertiary.withValues(alpha: 0.3),
         thickness: 1,
       ),
-      
+
       // Text theme
       textTheme: const TextTheme(
         displayLarge: TextStyle(
@@ -211,7 +198,7 @@ class AppTheme {
       ),
     );
   }
-  
+
   // Custom methods for status colors
   static Color getStatusColor(String status) {
     switch (status.toLowerCase()) {
@@ -233,7 +220,7 @@ class AppTheme {
         return textSecondary;
     }
   }
-  
+
   static IconData getStatusIcon(String status) {
     switch (status.toLowerCase()) {
       case 'success':
