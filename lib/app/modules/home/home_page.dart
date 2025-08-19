@@ -14,9 +14,13 @@ class HomePage extends GetView<HomeController> {
     return Scaffold(
       appBar: AppBar(
         title: Row(
+          spacing: 8,
           children: [
-            Image.asset('assets/images/icon.png', width: 32, height: 32),
-            const SizedBox(width: 8),
+            SizedBox(
+              width: 32,
+              height: 32,
+              child: Image.asset('assets/images/icon.png', fit: BoxFit.cover),
+            ),
             const Text('Flutter Ping'),
           ],
         ),
