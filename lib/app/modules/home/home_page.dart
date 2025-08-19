@@ -6,6 +6,8 @@ import '../../ui/widgets/status_indicator.dart';
 import '../../ui/widgets/check_result_card.dart';
 import '../../ui/widgets/version_manager_widget.dart';
 import '../../data/models/url_model.dart';
+import '../../data/models/version_model.dart';
+import '../../data/services/version_service.dart';
 
 class HomePage extends GetView<HomeController> {
   const HomePage({super.key});
@@ -175,6 +177,10 @@ class HomePage extends GetView<HomeController> {
         ),
         const SizedBox(height: 12),
 
+        // Version controls for network tests
+        _buildNetworkVersionControls(context),
+        const SizedBox(height: 16),
+
         if (controller.networkResults.isEmpty && !controller.isRunningChecks)
           _buildEmptyState('No network checks performed yet')
         else
@@ -185,6 +191,167 @@ class HomePage extends GetView<HomeController> {
                 item: item,
                 onRetry: () => controller.retryNetworkCheck(item),
               ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildNetworkVersionControls(BuildContext context) {
+    final versionService = Get.find<VersionService>();
+
+    return Obx(() {
+      final toolVersions = versionService.toolVersions;
+
+      return Card(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.settings, size: 20, color: AppTheme.primaryColor),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Version Settings for Network Tests',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+
+              // Gradle version control
+              _buildVersionControlRow(
+                context,
+                'Gradle',
+                toolVersions['gradle'],
+                versionService,
+                'gradle',
+              ),
+
+              const SizedBox(height: 12),
+
+              // Android Gradle Plugin version control
+              _buildVersionControlRow(
+                context,
+                'Android Gradle Plugin',
+                toolVersions['gradle'], // Use Gradle version to determine plugin version
+                versionService,
+                'gradle',
+                isPlugin: true,
+              ),
+
+              const SizedBox(height: 12),
+
+              // Show current effective versions
+              _buildEffectiveVersionsDisplay(
+                context,
+                toolVersions,
+                versionService,
+              ),
+
+              const SizedBox(height: 16),
+
+              // Apply and test button
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        // Refresh network tests with new versions
+                        controller.refreshNetworkChecks();
+                      },
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('Test with Current Versions'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  OutlinedButton.icon(
+                    onPressed: () => versionService.refreshAllVersions(),
+                    icon: const Icon(Icons.auto_fix_high),
+                    label: const Text('Auto-Detect'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      );
+    });
+  }
+
+  Widget _buildVersionControlRow(
+    BuildContext context,
+    String toolName,
+    ToolVersion? toolVersion,
+    VersionService versionService,
+    String serviceKey, {
+    bool isPlugin = false,
+  }) {
+    final controller = TextEditingController(
+      text: toolVersion?.preferredVersion ?? toolVersion?.detectedVersion ?? '',
+    );
+
+    return Row(
+      children: [
+        Expanded(
+          flex: 2,
+          child: Text(
+            toolName,
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+          ),
+        ),
+        Expanded(
+          flex: 3,
+          child: TextField(
+            controller: controller,
+            decoration: InputDecoration(
+              labelText: 'Version',
+              hintText: isPlugin
+                  ? 'Auto-detected from Gradle'
+                  : 'e.g., 8.7, 8.8',
+              border: const OutlineInputBorder(),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 8,
+              ),
+            ),
+            onChanged: (value) {
+              // Update the version in real-time
+              if (value.isNotEmpty) {
+                versionService.setPreferredVersion(serviceKey, value);
+              }
+            },
+          ),
+        ),
+        const SizedBox(width: 8),
+        if (toolVersion?.detectedVersion != null)
+          Expanded(
+            flex: 2,
+            child: Text(
+              'Detected: ${toolVersion!.detectedVersion}',
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: AppTheme.textSecondary),
+            ),
+          ),
+        const SizedBox(width: 8),
+        if (toolVersion?.preferredVersion != null)
+          IconButton(
+            onPressed: () async {
+              await versionService.clearPreferredVersion(serviceKey);
+              controller.text = toolVersion?.detectedVersion ?? '';
+            },
+            icon: const Icon(Icons.clear, size: 18),
+            tooltip: 'Use detected version',
+            style: IconButton.styleFrom(
+              backgroundColor: AppTheme.textTertiary.withValues(alpha: 0.1),
+              padding: const EdgeInsets.all(8),
             ),
           ),
       ],
@@ -299,5 +466,72 @@ class HomePage extends GetView<HomeController> {
 
   Widget _buildVersionManagerSection(BuildContext context) {
     return const VersionManagerWidget();
+  }
+
+  Widget _buildEffectiveVersionsDisplay(
+    BuildContext context,
+    Map<String, ToolVersion> toolVersions,
+    VersionService versionService,
+  ) {
+    final gradleVersion = toolVersions['gradle']?.effectiveVersion;
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppTheme.elevatedSurface.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppTheme.textTertiary.withValues(alpha: 0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Current Network Test Versions:',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              fontWeight: FontWeight.w600,
+              color: AppTheme.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Gradle: ${gradleVersion ?? 'Not set'}',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ),
+              if (gradleVersion != null) ...[
+                Expanded(
+                  child: Text(
+                    'Plugin: ${_getCompatiblePluginVersion(gradleVersion)}',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _getCompatiblePluginVersion(String gradleVersion) {
+    final version = double.tryParse(gradleVersion.split('.').take(2).join('.'));
+    if (version == null) return 'Unknown';
+
+    // Compatibility matrix (simplified)
+    if (version >= 8.0 && version < 8.1) return '8.0.2';
+    if (version >= 8.1 && version < 8.2) return '8.1.4';
+    if (version >= 8.2 && version < 8.3) return '8.2.2';
+    if (version >= 8.3 && version < 8.4) return '8.3.2';
+    if (version >= 8.4 && version < 8.5) return '8.4.2';
+    if (version >= 8.5 && version < 8.6) return '8.5.2';
+    if (version >= 8.6 && version < 8.7) return '8.6.2';
+    if (version >= 8.7 && version < 8.8) return '8.7.2';
+    if (version >= 8.8 && version < 8.9) return '8.8.2';
+    if (version >= 8.9 && version < 9.0) return '8.9.2';
+
+    return 'Unknown';
   }
 }

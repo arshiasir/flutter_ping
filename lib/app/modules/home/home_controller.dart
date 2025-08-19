@@ -187,6 +187,26 @@ class HomeController extends GetxController {
     _networkResults[index] = result;
   }
 
+  Future<void> refreshNetworkChecks() async {
+    if (_isRunningChecks.value) return;
+
+    _isRunningChecks.value = true;
+    _currentCheckName.value = 'Testing Network Connectivity';
+
+    try {
+      await _runNetworkChecks();
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'An error occurred during network checks: $e',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } finally {
+      _isRunningChecks.value = false;
+      _currentCheckName.value = '';
+    }
+  }
+
   Future<void> retryFlutterDoctor() async {
     if (_isRunningChecks.value) return;
 
