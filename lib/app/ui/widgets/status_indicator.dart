@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import '../theme.dart';
 import '../../data/models/url_model.dart';
 
@@ -109,20 +110,13 @@ class StatusBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: textColor.withValues(alpha: 0.3)),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          StatusIndicator(status: status, size: 16, animate: true),
-          const SizedBox(width: 4),
-          Text(
-            displayText,
-            style: TextStyle(
-              color: textColor,
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
+      child: Text(
+        displayText,
+        style: Get.theme.textTheme.bodySmall?.copyWith(
+          color: textColor,
+          fontWeight: FontWeight.w600,
+          fontSize: 10,
+        ),
       ),
     );
   }
@@ -130,17 +124,15 @@ class StatusBadge extends StatelessWidget {
 
 class ProgressCard extends StatelessWidget {
   final String title;
-  final String? subtitle;
+  final String subtitle;
   final double progress;
-  final Color? progressColor;
   final Widget? trailing;
 
   const ProgressCard({
     super.key,
     required this.title,
-    this.subtitle,
+    required this.subtitle,
     required this.progress,
-    this.progressColor,
     this.trailing,
   });
 
@@ -149,45 +141,27 @@ class ProgressCard extends StatelessWidget {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Row(
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                      if (subtitle != null) ...[
-                        const SizedBox(height: 4),
-                        Text(
-                          subtitle!,
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                      ],
-                    ],
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: Get.theme.textTheme.titleMedium),
+                  const SizedBox(height: 4),
+                  Text(subtitle, style: Get.theme.textTheme.bodySmall),
+                  const SizedBox(height: 8),
+                  LinearProgressIndicator(
+                    value: progress,
+                    backgroundColor: AppTheme.elevatedSurface,
+                    valueColor: const AlwaysStoppedAnimation<Color>(
+                      AppTheme.primaryColor,
+                    ),
                   ),
-                ),
-                if (trailing != null) trailing!,
-              ],
-            ),
-            const SizedBox(height: 12),
-            LinearProgressIndicator(
-              value: progress,
-              backgroundColor: AppTheme.elevatedSurface,
-              valueColor: AlwaysStoppedAnimation<Color>(
-                progressColor ?? AppTheme.primaryColor,
+                ],
               ),
             ),
-            const SizedBox(height: 8),
-            Text(
-              '${(progress * 100).round()}% Complete',
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
+            if (trailing != null) ...[const SizedBox(width: 16), trailing!],
           ],
         ),
       ),

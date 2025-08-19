@@ -2,7 +2,6 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:get/get.dart' hide Response;
 import '../models/url_model.dart';
-import '../models/version_model.dart';
 import 'version_service.dart';
 
 class NetworkService extends GetxService {

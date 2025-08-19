@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:get/get.dart';
 import '../theme.dart';
 import '../widgets/status_indicator.dart';
 import '../../data/models/url_model.dart';
@@ -32,11 +33,8 @@ class CheckResultCard extends StatelessWidget {
           status: status,
           animate: status == CheckStatus.running,
         ),
-        title: Text(title, style: Theme.of(context).textTheme.titleMedium),
-        subtitle: Text(
-          description,
-          style: Theme.of(context).textTheme.bodySmall,
-        ),
+        title: Text(title, style: Get.theme.textTheme.titleMedium),
+        subtitle: Text(description, style: Get.theme.textTheme.bodySmall),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -51,19 +49,19 @@ class CheckResultCard extends StatelessWidget {
             const Icon(Icons.expand_more),
           ],
         ),
-        children: [if (showDetails) _buildDetailsSection(context)],
+        children: [if (showDetails) _buildDetailsSection()],
       ),
     );
   }
 
-  Widget _buildDetailsSection(BuildContext context) {
+  Widget _buildDetailsSection() {
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (details != null) ...[
-            Text('Details:', style: Theme.of(context).textTheme.titleSmall),
+            Text('Details:', style: Get.theme.textTheme.titleSmall),
             const SizedBox(height: 8),
             Container(
               width: double.infinity,
@@ -77,16 +75,16 @@ class CheckResultCard extends StatelessWidget {
               ),
               child: SelectableText(
                 details!,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodySmall?.copyWith(fontFamily: 'monospace'),
+                style: Get.theme.textTheme.bodySmall?.copyWith(
+                  fontFamily: 'monospace',
+                ),
               ),
             ),
             const SizedBox(height: 12),
             Row(
               children: [
                 ElevatedButton.icon(
-                  onPressed: () => _copyToClipboard(context, details!),
+                  onPressed: () => _copyToClipboard(details!),
                   icon: const Icon(Icons.copy, size: 16),
                   label: const Text('Copy Details'),
                   style: ElevatedButton.styleFrom(
@@ -98,16 +96,8 @@ class CheckResultCard extends StatelessWidget {
               ],
             ),
           ],
-
           if (errorMessage != null) ...[
             if (details != null) const SizedBox(height: 16),
-            Text(
-              'Error:',
-              style: Theme.of(
-                context,
-              ).textTheme.titleSmall?.copyWith(color: AppTheme.error),
-            ),
-            const SizedBox(height: 8),
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(12),
@@ -118,40 +108,36 @@ class CheckResultCard extends StatelessWidget {
                   color: AppTheme.error.withValues(alpha: 0.3),
                 ),
               ),
-              child: SelectableText(
-                _formatErrorMessage(errorMessage!),
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppTheme.error,
-                  fontFamily: 'monospace',
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                ElevatedButton.icon(
-                  onPressed: () => _copyToClipboard(context, errorMessage!),
-                  icon: const Icon(Icons.copy, size: 16),
-                  label: const Text('Copy Error'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.error.withValues(alpha: 0.1),
-                    foregroundColor: AppTheme.error,
-                    elevation: 0,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.error_outline,
+                        color: AppTheme.error,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Error Details',
+                        style: Get.theme.textTheme.titleSmall?.copyWith(
+                          color: AppTheme.error,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-                if (onRetry != null) ...[
-                  const SizedBox(width: 8),
-                  ElevatedButton.icon(
-                    onPressed: onRetry,
-                    icon: const Icon(Icons.refresh, size: 16),
-                    label: const Text('Retry'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.primaryColor,
-                      foregroundColor: Colors.white,
+                  const SizedBox(height: 8),
+                  SelectableText(
+                    errorMessage!,
+                    style: Get.theme.textTheme.bodySmall?.copyWith(
+                      color: AppTheme.error,
+                      fontFamily: 'monospace',
                     ),
                   ),
                 ],
-              ],
+              ),
             ),
           ],
         ],
@@ -159,42 +145,15 @@ class CheckResultCard extends StatelessWidget {
     );
   }
 
-  void _copyToClipboard(BuildContext context, String text) {
+  void _copyToClipboard(String text) {
     Clipboard.setData(ClipboardData(text: text));
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Copied to clipboard'),
-        duration: Duration(seconds: 2),
-      ),
+    Get.snackbar(
+      'Copied',
+      'Details copied to clipboard',
+      snackPosition: SnackPosition.BOTTOM,
+      backgroundColor: AppTheme.success.withValues(alpha: 0.1),
+      colorText: AppTheme.success,
     );
-  }
-
-  String _formatErrorMessage(String errorMessage) {
-    if (errorMessage.contains('Flutter command not found in PATH')) {
-      return '''$errorMessage
-
-💡 Troubleshooting Steps:
-1. Verify Flutter is installed and working in terminal/command prompt
-2. Check that Flutter's bin directory is in your system PATH
-3. Restart this application after verifying Flutter access
-4. On Windows, try running as administrator if needed
-
-To test Flutter access:
-• Open Command Prompt/Terminal
-• Run: flutter --version
-• If this works, restart the app''';
-    } else if (errorMessage.contains('ProcessException')) {
-      return '''$errorMessage
-
-💡 This indicates a system-level issue:
-1. Flutter executable not found by the system
-2. Permissions issue preventing command execution
-3. PATH environment variable not accessible to this app
-
-Try restarting the application or your computer.''';
-    }
-
-    return errorMessage;
   }
 }
 

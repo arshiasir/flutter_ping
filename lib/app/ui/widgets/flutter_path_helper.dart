@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:get/get.dart';
 import '../theme.dart';
 
 class FlutterPathHelper extends StatelessWidget {
@@ -27,7 +28,7 @@ class FlutterPathHelper extends StatelessWidget {
                 Expanded(
                   child: Text(
                     'Flutter PATH Issue Detected',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    style: Get.theme.textTheme.titleMedium?.copyWith(
                       color: AppTheme.warning,
                       fontWeight: FontWeight.w600,
                     ),
@@ -38,19 +39,19 @@ class FlutterPathHelper extends StatelessWidget {
             const SizedBox(height: 12),
             Text(
               'Flutter is installed but not accessible from this app.',
-              style: Theme.of(context).textTheme.bodyMedium,
+              style: Get.theme.textTheme.bodyMedium,
             ),
             const SizedBox(height: 16),
-            _buildQuickFix(context),
+            _buildQuickFix(),
             const SizedBox(height: 16),
-            _buildDetailedSteps(context),
+            _buildDetailedSteps(),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildQuickFix(BuildContext context) {
+  Widget _buildQuickFix() {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -63,7 +64,7 @@ class FlutterPathHelper extends StatelessWidget {
         children: [
           Text(
             '🚀 Quick Fix:',
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+            style: Get.theme.textTheme.titleSmall?.copyWith(
               color: AppTheme.warning,
               fontWeight: FontWeight.w600,
             ),
@@ -76,7 +77,7 @@ class FlutterPathHelper extends StatelessWidget {
           Row(
             children: [
               ElevatedButton.icon(
-                onPressed: () => _copyCommand(context, 'flutter --version'),
+                onPressed: () => _copyCommand('flutter --version'),
                 icon: const Icon(Icons.copy, size: 16),
                 label: const Text('Copy Command'),
                 style: ElevatedButton.styleFrom(
@@ -92,77 +93,88 @@ class FlutterPathHelper extends StatelessWidget {
     );
   }
 
-  Widget _buildDetailedSteps(BuildContext context) {
+  Widget _buildDetailedSteps() {
     return ExpansionTile(
       title: Text(
         'Detailed Troubleshooting',
-        style: Theme.of(context).textTheme.titleSmall,
+        style: Get.theme.textTheme.titleSmall,
       ),
       children: [
-        Padding(
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildStep(context, '1. Verify Flutter Installation', [
-                'Open terminal/command prompt',
-                'Run: flutter --version',
-                'Should show Flutter version info',
-              ]),
-              const SizedBox(height: 16),
-              _buildStep(context, '2. Check PATH Environment', [
-                'Ensure Flutter bin directory is in PATH',
-                'On Windows: Add C:\\flutter\\bin to PATH',
-                'Restart terminal after changing PATH',
-              ]),
-              const SizedBox(height: 16),
-              _buildStep(context, '3. Alternative Solutions', [
-                'Try running this app as administrator',
-                'Restart your computer if PATH was changed',
-                'Check if antivirus is blocking execution',
-              ]),
-            ],
-          ),
+        const SizedBox(height: 16),
+        _buildTroubleshootingStep(
+          '1. Check Flutter Installation',
+          'Verify Flutter is properly installed in your system.',
+          Icons.check_circle,
+          AppTheme.success,
+        ),
+        _buildTroubleshootingStep(
+          '2. Add to PATH',
+          'Add Flutter bin directory to your system PATH environment variable.',
+          Icons.settings,
+          AppTheme.info,
+        ),
+        _buildTroubleshootingStep(
+          '3. Restart Terminal',
+          'Close and reopen your terminal/command prompt after PATH changes.',
+          Icons.refresh,
+          AppTheme.warning,
+        ),
+        _buildTroubleshootingStep(
+          '4. Verify Installation',
+          'Run "flutter doctor" to check for any other issues.',
+          Icons.medical_services,
+          AppTheme.primaryColor,
         ),
       ],
     );
   }
 
-  Widget _buildStep(BuildContext context, String title, List<String> steps) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: Theme.of(
-            context,
-          ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
-        ),
-        const SizedBox(height: 8),
-        ...steps.map(
-          (step) => Padding(
-            padding: const EdgeInsets.only(left: 16, bottom: 4),
-            child: Row(
+  Widget _buildTroubleshootingStep(
+    String title,
+    String description,
+    IconData icon,
+    Color color,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: color, size: 20),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('• ', style: TextStyle(fontSize: 16)),
-                Expanded(child: Text(step)),
+                Text(
+                  title,
+                  style: Get.theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  description,
+                  style: Get.theme.textTheme.bodySmall?.copyWith(
+                    color: AppTheme.textSecondary,
+                  ),
+                ),
               ],
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
-  void _copyCommand(BuildContext context, String command) {
+  void _copyCommand(String command) {
     Clipboard.setData(ClipboardData(text: command));
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Copied: $command'),
-        duration: const Duration(seconds: 2),
-        backgroundColor: AppTheme.warning,
-      ),
+    Get.snackbar(
+      'Command Copied',
+      'The command has been copied to your clipboard',
+      snackPosition: SnackPosition.BOTTOM,
+      backgroundColor: AppTheme.success.withValues(alpha: 0.1),
+      colorText: AppTheme.success,
     );
   }
 }

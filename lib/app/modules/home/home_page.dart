@@ -40,7 +40,7 @@ class HomePage extends GetView<HomeController> {
           ),
         ],
       ),
-      body: Obx(() => _buildBody(context)),
+      body: Obx(() => _buildBody()),
       floatingActionButton: Obx(
         () => FloatingActionButton.extended(
           onPressed: controller.isRunningChecks
@@ -58,7 +58,7 @@ class HomePage extends GetView<HomeController> {
     );
   }
 
-  Widget _buildBody(BuildContext context) {
+  Widget _buildBody() {
     return RefreshIndicator(
       onRefresh: controller.runAllChecks,
       child: SingleChildScrollView(
@@ -67,24 +67,24 @@ class HomePage extends GetView<HomeController> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildOverallStatus(context),
+            _buildOverallStatus(),
             const SizedBox(height: 24),
 
             if (controller.isRunningChecks) ...[
-              _buildProgressSection(context),
+              _buildProgressSection(),
               const SizedBox(height: 24),
             ],
 
-            _buildNetworkSection(context),
+            _buildNetworkSection(),
             const SizedBox(height: 24),
 
-            _buildFlutterSection(context),
+            _buildFlutterSection(),
             const SizedBox(height: 24),
 
-            _buildDoctorSection(context),
+            _buildDoctorSection(),
             const SizedBox(height: 24),
 
-            _buildVersionManagerSection(context),
+            _buildVersionManagerSection(),
             const SizedBox(height: 100), // Space for FAB
           ],
         ),
@@ -92,7 +92,7 @@ class HomePage extends GetView<HomeController> {
     );
   }
 
-  Widget _buildOverallStatus(BuildContext context) {
+  Widget _buildOverallStatus() {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -124,12 +124,12 @@ class HomePage extends GetView<HomeController> {
                     children: [
                       Text(
                         'System Status',
-                        style: Theme.of(context).textTheme.headlineSmall,
+                        style: Get.theme.textTheme.headlineSmall,
                       ),
                       const SizedBox(height: 4),
                       Text(
                         controller.getOverallStatus(),
-                        style: Theme.of(context).textTheme.bodyMedium,
+                        style: Get.theme.textTheme.bodyMedium,
                       ),
                     ],
                   ),
@@ -152,7 +152,7 @@ class HomePage extends GetView<HomeController> {
     );
   }
 
-  Widget _buildProgressSection(BuildContext context) {
+  Widget _buildProgressSection() {
     return ProgressCard(
       title: controller.currentCheckName,
       subtitle: 'System check in progress...',
@@ -165,7 +165,7 @@ class HomePage extends GetView<HomeController> {
     );
   }
 
-  Widget _buildNetworkSection(BuildContext context) {
+  Widget _buildNetworkSection() {
     return Column(
       spacing: 16,
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -182,11 +182,11 @@ class HomePage extends GetView<HomeController> {
                   children: [
                     Text(
                       'Network Connectivity',
-                      style: Theme.of(context).textTheme.headlineSmall,
+                      style: Get.theme.textTheme.headlineSmall,
                     ),
                     Text(
                       'Testing access to essential Flutter development resources',
-                      style: Theme.of(context).textTheme.bodySmall,
+                      style: Get.theme.textTheme.bodySmall,
                     ),
                   ],
                 ),
@@ -201,7 +201,7 @@ class HomePage extends GetView<HomeController> {
         ),
         Obx(
           () => controller.isVersionManagerOpen.value
-              ? _buildNetworkVersionControls(context)
+              ? _buildNetworkVersionControls()
               : const SizedBox.shrink(),
         ),
 
@@ -221,7 +221,7 @@ class HomePage extends GetView<HomeController> {
     );
   }
 
-  Widget _buildNetworkVersionControls(BuildContext context) {
+  Widget _buildNetworkVersionControls() {
     final versionService = Get.find<VersionService>();
 
     return Obx(() {
@@ -239,7 +239,7 @@ class HomePage extends GetView<HomeController> {
                   const SizedBox(width: 8),
                   Text(
                     'Version Settings for Network Tests',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    style: Get.theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -249,7 +249,6 @@ class HomePage extends GetView<HomeController> {
 
               // Gradle version control
               _buildVersionControlRow(
-                context,
                 'Gradle',
                 toolVersions['gradle'],
                 versionService,
@@ -260,7 +259,6 @@ class HomePage extends GetView<HomeController> {
 
               // Android Gradle Plugin version control
               _buildVersionControlRow(
-                context,
                 'Android Gradle Plugin',
                 toolVersions['gradle'], // Use Gradle version to determine plugin version
                 versionService,
@@ -271,11 +269,7 @@ class HomePage extends GetView<HomeController> {
               const SizedBox(height: 12),
 
               // Show current effective versions
-              _buildEffectiveVersionsDisplay(
-                context,
-                toolVersions,
-                versionService,
-              ),
+              _buildEffectiveVersionsDisplay(toolVersions, versionService),
 
               const SizedBox(height: 16),
 
@@ -308,7 +302,6 @@ class HomePage extends GetView<HomeController> {
   }
 
   Widget _buildVersionControlRow(
-    BuildContext context,
     String toolName,
     ToolVersion? toolVersion,
     VersionService versionService,
@@ -325,9 +318,9 @@ class HomePage extends GetView<HomeController> {
           flex: 2,
           child: Text(
             toolName,
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+            style: Get.theme.textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ),
         Expanded(
@@ -359,9 +352,9 @@ class HomePage extends GetView<HomeController> {
             flex: 2,
             child: Text(
               'Detected: ${toolVersion!.detectedVersion}',
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(color: AppTheme.textSecondary),
+              style: Get.theme.textTheme.bodySmall?.copyWith(
+                color: AppTheme.textSecondary,
+              ),
             ),
           ),
         const SizedBox(width: 8),
@@ -382,14 +375,13 @@ class HomePage extends GetView<HomeController> {
     );
   }
 
-  Widget _buildFlutterSection(BuildContext context) {
+  Widget _buildFlutterSection() {
     final flutterInfo = controller.flutterInfo;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildSectionHeader(
-          context,
           'Flutter SDK',
           'Flutter installation and version information',
           Icons.developer_board,
@@ -412,14 +404,13 @@ class HomePage extends GetView<HomeController> {
     );
   }
 
-  Widget _buildDoctorSection(BuildContext context) {
+  Widget _buildDoctorSection() {
     final doctorResult = controller.doctorResult;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildSectionHeader(
-          context,
           'Flutter Doctor',
           'Development environment health check',
           Icons.medical_services,
@@ -445,12 +436,7 @@ class HomePage extends GetView<HomeController> {
     );
   }
 
-  Widget _buildSectionHeader(
-    BuildContext context,
-    String title,
-    String description,
-    IconData icon,
-  ) {
+  Widget _buildSectionHeader(String title, String description, IconData icon) {
     return Row(
       children: [
         Icon(icon, size: 24, color: AppTheme.primaryColor),
@@ -459,8 +445,8 @@ class HomePage extends GetView<HomeController> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(title, style: Theme.of(context).textTheme.headlineSmall),
-              Text(description, style: Theme.of(context).textTheme.bodySmall),
+              Text(title, style: Get.theme.textTheme.headlineSmall),
+              Text(description, style: Get.theme.textTheme.bodySmall),
             ],
           ),
         ),
@@ -488,12 +474,11 @@ class HomePage extends GetView<HomeController> {
     );
   }
 
-  Widget _buildVersionManagerSection(BuildContext context) {
+  Widget _buildVersionManagerSection() {
     return const VersionManagerWidget();
   }
 
   Widget _buildEffectiveVersionsDisplay(
-    BuildContext context,
     Map<String, ToolVersion> toolVersions,
     VersionService versionService,
   ) {
@@ -511,7 +496,7 @@ class HomePage extends GetView<HomeController> {
         children: [
           Text(
             'Current Network Test Versions:',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            style: Get.theme.textTheme.bodySmall?.copyWith(
               fontWeight: FontWeight.w600,
               color: AppTheme.textSecondary,
             ),
@@ -522,14 +507,14 @@ class HomePage extends GetView<HomeController> {
               Expanded(
                 child: Text(
                   'Gradle: ${gradleVersion ?? 'Not set'}',
-                  style: Theme.of(context).textTheme.bodySmall,
+                  style: Get.theme.textTheme.bodySmall,
                 ),
               ),
               if (gradleVersion != null) ...[
                 Expanded(
                   child: Text(
                     'Plugin: ${_getCompatiblePluginVersion(gradleVersion)}',
-                    style: Theme.of(context).textTheme.bodySmall,
+                    style: Get.theme.textTheme.bodySmall,
                   ),
                 ),
               ],
