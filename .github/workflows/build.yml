@@ -108,12 +108,9 @@ jobs:
           !include "MUI2.nsh"
           
           Name "${APPNAME}"
-          Icon "artifacts/windows-build/flutter_ping.exe"
           OutFile "flutter-ping-windows-installer.exe"
           
           !define MUI_ABORTWARNING
-          !define MUI_ICON "artifacts/windows-build/flutter_ping.exe"
-          !define MUI_UNICON "artifacts/windows-build/flutter_ping.exe"
           
           !insertmacro MUI_PAGE_WELCOME
           !insertmacro MUI_PAGE_LICENSE "LICENSE"
@@ -223,7 +220,6 @@ jobs:
           # Create DMG
           create-dmg \
             --volname "Flutter Ping" \
-            --volicon "artifacts/macos-build/Flutter Ping.app/Contents/Resources/AppIcon.icns" \
             --window-pos 200 120 \
             --window-size 600 300 \
             --icon-size 100 \
