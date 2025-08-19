@@ -9,7 +9,7 @@ class FlutterService extends GetxService {
   Future<FlutterInfo> getFlutterVersion() async {
     try {
       final result = await Process.run('flutter', ['--version']);
-      
+
       if (result.exitCode == 0) {
         final output = result.stdout.toString();
         return _parseFlutterVersion(output);
@@ -47,7 +47,10 @@ class FlutterService extends GetxService {
       } else if (trimmed.startsWith('Engine •')) {
         engine = trimmed.replaceFirst('Engine • revision ', '');
       } else if (trimmed.startsWith('Tools •')) {
-        dartVersion = trimmed.replaceFirst('Tools • Dart ', '').split(' ').first;
+        dartVersion = trimmed
+            .replaceFirst('Tools • Dart ', '')
+            .split(' ')
+            .first;
       }
     }
 
@@ -65,10 +68,12 @@ class FlutterService extends GetxService {
     try {
       final result = await Process.run('flutter', ['doctor', '-v']);
       final output = result.stdout.toString();
-      
+
       final issues = _parseDoctorOutput(output);
-      final isHealthy = issues.where((issue) => issue.severity == 'error').isEmpty;
-      
+      final isHealthy = issues
+          .where((issue) => issue.severity == 'error')
+          .isEmpty;
+
       return FlutterDoctorResult(
         isHealthy: isHealthy,
         issues: issues,
@@ -87,10 +92,10 @@ class FlutterService extends GetxService {
   List<DoctorIssue> _parseDoctorOutput(String output) {
     final issues = <DoctorIssue>[];
     final lines = output.split('\n');
-    
+
     for (int i = 0; i < lines.length; i++) {
       final line = lines[i].trim();
-      
+
       if (line.startsWith('[✓]')) {
         // Success case - can be ignored or marked as info
         continue;
@@ -98,7 +103,7 @@ class FlutterService extends GetxService {
         // Error case
         final title = line.replaceFirst('[✗] ', '');
         final details = <String>[];
-        
+
         // Collect details from following lines
         for (int j = i + 1; j < lines.length && j < i + 10; j++) {
           final detailLine = lines[j].trim();
@@ -107,19 +112,22 @@ class FlutterService extends GetxService {
             details.add(detailLine);
           }
         }
-        
-        issues.add(DoctorIssue(
-          category: 'Error',
-          title: title,
-          description: 'This component has critical issues that need to be resolved.',
-          severity: 'error',
-          details: details,
-        ));
+
+        issues.add(
+          DoctorIssue(
+            category: 'Error',
+            title: title,
+            description:
+                'This component has critical issues that need to be resolved.',
+            severity: 'error',
+            details: details,
+          ),
+        );
       } else if (line.startsWith('[!]')) {
         // Warning case
         final title = line.replaceFirst('[!] ', '');
         final details = <String>[];
-        
+
         for (int j = i + 1; j < lines.length && j < i + 10; j++) {
           final detailLine = lines[j].trim();
           if (detailLine.startsWith('[') || detailLine.isEmpty) break;
@@ -127,17 +135,20 @@ class FlutterService extends GetxService {
             details.add(detailLine);
           }
         }
-        
-        issues.add(DoctorIssue(
-          category: 'Warning',
-          title: title,
-          description: 'This component has warnings that should be addressed.',
-          severity: 'warning',
-          details: details,
-        ));
+
+        issues.add(
+          DoctorIssue(
+            category: 'Warning',
+            title: title,
+            description:
+                'This component has warnings that should be addressed.',
+            severity: 'warning',
+            details: details,
+          ),
+        );
       }
     }
-    
+
     return issues;
   }
 
@@ -145,7 +156,7 @@ class FlutterService extends GetxService {
     try {
       final result = await Process.run('flutter', ['upgrade', '--dry-run']);
       final output = result.stdout.toString();
-      
+
       if (output.contains('Flutter is already up to date')) {
         return CheckResult(
           name: 'Flutter Updates',
@@ -184,14 +195,21 @@ class FlutterService extends GetxService {
 
   Future<List<PubPackageInfo>> checkPubOutdated() async {
     try {
-      final result = await Process.run('flutter', ['pub', 'outdated', '--json']);
-      
+      final result = await Process.run('flutter', [
+        'pub',
+        'outdated',
+        '--json',
+      ]);
+
       if (result.exitCode != 0) {
         // Try without --json flag
-        final fallbackResult = await Process.run('flutter', ['pub', 'outdated']);
+        final fallbackResult = await Process.run('flutter', [
+          'pub',
+          'outdated',
+        ]);
         return _parsePubOutdatedText(fallbackResult.stdout.toString());
       }
-      
+
       // Parse JSON output if available
       return _parsePubOutdatedJson(result.stdout.toString());
     } catch (e) {
@@ -208,20 +226,24 @@ class FlutterService extends GetxService {
   List<PubPackageInfo> _parsePubOutdatedText(String textOutput) {
     final packages = <PubPackageInfo>[];
     final lines = textOutput.split('\n');
-    
+
     for (final line in lines) {
       // Parse lines like: "package_name  1.0.0  1.1.0  1.1.0"
       final parts = line.trim().split(RegExp(r'\s+'));
-      if (parts.length >= 3 && !parts[0].startsWith('Package') && parts[0].isNotEmpty) {
-        packages.add(PubPackageInfo(
-          name: parts[0],
-          currentVersion: parts[1],
-          latestVersion: parts.length > 2 ? parts[2] : null,
-          isOutdated: parts.length > 2 && parts[1] != parts[2],
-        ));
+      if (parts.length >= 3 &&
+          !parts[0].startsWith('Package') &&
+          parts[0].isNotEmpty) {
+        packages.add(
+          PubPackageInfo(
+            name: parts[0],
+            currentVersion: parts[1],
+            latestVersion: parts.length > 2 ? parts[2] : null,
+            isOutdated: parts.length > 2 && parts[1] != parts[2],
+          ),
+        );
       }
     }
-    
+
     return packages;
   }
 }
