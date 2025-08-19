@@ -4,6 +4,7 @@ import 'home_controller.dart';
 import '../../ui/theme.dart';
 import '../../ui/widgets/status_indicator.dart';
 import '../../ui/widgets/check_result_card.dart';
+import '../../ui/widgets/version_manager_widget.dart';
 import '../../data/models/url_model.dart';
 
 class HomePage extends GetView<HomeController> {
@@ -79,6 +80,9 @@ class HomePage extends GetView<HomeController> {
             const SizedBox(height: 24),
 
             _buildDoctorSection(context),
+            const SizedBox(height: 24),
+
+            _buildVersionManagerSection(context),
             const SizedBox(height: 100), // Space for FAB
           ],
         ),
@@ -291,5 +295,9 @@ class HomePage extends GetView<HomeController> {
         ),
       ),
     );
+  }
+
+  Widget _buildVersionManagerSection(BuildContext context) {
+    return const VersionManagerWidget();
   }
 }

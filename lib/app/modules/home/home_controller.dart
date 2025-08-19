@@ -4,6 +4,7 @@ import '../../data/models/system_info_model.dart';
 import '../../data/services/network_service.dart';
 import '../../data/services/flutter_service.dart';
 import '../../data/services/android_service.dart';
+import '../../data/services/version_service.dart';
 
 class HomeController extends GetxController {
   static HomeController get instance => Get.find<HomeController>();
@@ -19,12 +20,14 @@ class HomeController extends GetxController {
   final RxString _currentCheckName = ''.obs;
   final RxDouble _overallProgress = 0.0.obs;
   final RxInt _completedChecks = 0.obs;
-  final RxInt _totalChecks = 6.obs; // Network, Flutter, Doctor, Upgrade, Pub, Android
+  final RxInt _totalChecks =
+      7.obs; // Network, Flutter, Doctor, Upgrade, Pub, Android, Version
 
   // Services
   late final NetworkService _networkService;
   late final FlutterService _flutterService;
   late final AndroidService _androidService;
+  late final VersionService _versionService;
 
   // Getters
   bool get isRunningChecks => _isRunningChecks.value;
@@ -36,13 +39,20 @@ class HomeController extends GetxController {
   AndroidSdkInfo? get androidInfo => _androidInfo.value;
   String get currentCheckName => _currentCheckName.value;
   double get overallProgress => _overallProgress.value;
-  
+
   // Computed properties
-  bool get hasNetworkIssues => _networkResults.any((item) => item.status == CheckStatus.failed);
-  bool get hasWarnings => _networkResults.any((item) => item.status == CheckStatus.warning) ||
-      (_doctorResult.value?.issues.any((issue) => issue.severity == 'warning') ?? false);
-  bool get hasErrors => _networkResults.any((item) => item.status == CheckStatus.failed) ||
-      (_doctorResult.value?.issues.any((issue) => issue.severity == 'error') ?? false) ||
+  bool get hasNetworkIssues =>
+      _networkResults.any((item) => item.status == CheckStatus.failed);
+  bool get hasWarnings =>
+      _networkResults.any((item) => item.status == CheckStatus.warning) ||
+      (_doctorResult.value?.issues.any(
+            (issue) => issue.severity == 'warning',
+          ) ??
+          false);
+  bool get hasErrors =>
+      _networkResults.any((item) => item.status == CheckStatus.failed) ||
+      (_doctorResult.value?.issues.any((issue) => issue.severity == 'error') ??
+          false) ||
       (_flutterInfo.value?.isInstalled == false) ||
       (_androidInfo.value?.isConfigured == false);
 
@@ -56,6 +66,7 @@ class HomeController extends GetxController {
     _networkService = Get.find<NetworkService>();
     _flutterService = Get.find<FlutterService>();
     _androidService = Get.find<AndroidService>();
+    _versionService = Get.find<VersionService>();
   }
 
   Future<void> runAllChecks() async {
@@ -64,7 +75,7 @@ class HomeController extends GetxController {
     _isRunningChecks.value = true;
     _completedChecks.value = 0;
     _overallProgress.value = 0.0;
-    
+
     try {
       // 1. Network checks
       await _runNetworkChecks();
@@ -90,6 +101,9 @@ class HomeController extends GetxController {
       await _runAndroidSdkCheck();
       _updateProgress();
 
+      // 7. Version management
+      await _runVersionChecks();
+      _updateProgress();
     } catch (e) {
       Get.snackbar(
         'Error',
@@ -104,7 +118,10 @@ class HomeController extends GetxController {
 
   Future<void> _runNetworkChecks() async {
     _currentCheckName.value = 'Testing Network Connectivity';
-    
+
+    // Use version-aware URLs if available
+    final urls = _networkService.getUrlsWithVersions();
+
     final results = await _networkService.checkAllUrls(
       onProgress: (item) {
         final index = _networkResults.indexWhere((r) => r.url == item.url);
@@ -114,8 +131,9 @@ class HomeController extends GetxController {
           _networkResults.add(item);
         }
       },
+      urls: urls,
     );
-    
+
     _networkResults.assignAll(results);
   }
 
@@ -145,6 +163,11 @@ class HomeController extends GetxController {
     _androidInfo.value = await _androidService.getAndroidSdkInfo();
   }
 
+  Future<void> _runVersionChecks() async {
+    _currentCheckName.value = 'Checking Tool Versions';
+    await _versionService.refreshAllVersions();
+  }
+
   void _updateProgress() {
     _completedChecks.value++;
     _overallProgress.value = _completedChecks.value / _totalChecks.value;
@@ -158,7 +181,7 @@ class HomeController extends GetxController {
 
     // Mark as running
     _networkResults[index] = item.copyWith(status: CheckStatus.running);
-    
+
     // Perform check
     final result = await _networkService.checkUrl(item);
     _networkResults[index] = result;
@@ -166,7 +189,7 @@ class HomeController extends GetxController {
 
   Future<void> retryFlutterDoctor() async {
     if (_isRunningChecks.value) return;
-    
+
     _currentCheckName.value = 'Running Flutter Doctor';
     _doctorResult.value = await _flutterService.runFlutterDoctor();
     _currentCheckName.value = '';
@@ -187,7 +210,7 @@ class HomeController extends GetxController {
     if (_isRunningChecks.value) {
       return 'Running checks...';
     }
-    
+
     if (hasErrors) {
       return 'Issues detected - Action required';
     } else if (hasWarnings) {

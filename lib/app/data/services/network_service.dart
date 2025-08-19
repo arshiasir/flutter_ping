@@ -2,6 +2,8 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:get/get.dart' hide Response;
 import '../models/url_model.dart';
+import '../models/version_model.dart';
+import 'version_service.dart';
 
 class NetworkService extends GetxService {
   static NetworkService get instance => Get.find<NetworkService>();
@@ -110,6 +112,68 @@ class NetworkService extends GetxService {
 
   List<NetworkCheckItem> get criticalUrls => List.unmodifiable(_criticalUrls);
 
+  // Get URLs with version preferences applied
+  List<NetworkCheckItem> getUrlsWithVersions() {
+    try {
+      final versionService = Get.find<VersionService>();
+      final urls = <NetworkCheckItem>[];
+
+      for (final item in _criticalUrls) {
+        String url = item.url;
+
+        // Apply version preferences for specific tools
+        if (item.name.contains('Gradle') || item.url.contains('gradle')) {
+          final gradleVersion = versionService.getToolVersion('gradle');
+          if (gradleVersion?.effectiveVersion != null) {
+            url = url.replaceAll(
+              RegExp(r'gradle-\d+\.\d+(?:\.\d+)?'),
+              'gradle-${gradleVersion!.effectiveVersion}',
+            );
+          }
+        } else if (item.name.contains('Android Gradle Plugin') ||
+            item.url.contains('gradle-8.0.2')) {
+          final gradleVersion = versionService.getToolVersion('gradle');
+          if (gradleVersion?.effectiveVersion != null) {
+            // Map Gradle version to compatible Android Gradle Plugin version
+            final pluginVersion = _getCompatiblePluginVersion(
+              gradleVersion!.effectiveVersion!,
+            );
+            if (pluginVersion != null) {
+              url = url.replaceAll('gradle-8.0.2', 'gradle-$pluginVersion');
+            }
+          }
+        }
+
+        urls.add(item.copyWith(url: url));
+      }
+
+      return urls;
+    } catch (e) {
+      // If version service is not available, return original URLs
+      return _criticalUrls;
+    }
+  }
+
+  // Get compatible Android Gradle Plugin version for a given Gradle version
+  String? _getCompatiblePluginVersion(String gradleVersion) {
+    final version = double.tryParse(gradleVersion.split('.').take(2).join('.'));
+    if (version == null) return null;
+
+    // Compatibility matrix (simplified)
+    if (version >= 8.0 && version < 8.1) return '8.0.2';
+    if (version >= 8.1 && version < 8.2) return '8.1.4';
+    if (version >= 8.2 && version < 8.3) return '8.2.2';
+    if (version >= 8.3 && version < 8.4) return '8.3.2';
+    if (version >= 8.4 && version < 8.5) return '8.4.2';
+    if (version >= 8.5 && version < 8.6) return '8.5.2';
+    if (version >= 8.6 && version < 8.7) return '8.6.2';
+    if (version >= 8.7 && version < 8.8) return '8.7.2';
+    if (version >= 8.8 && version < 8.9) return '8.8.2';
+    if (version >= 8.9 && version < 9.0) return '8.9.2';
+
+    return null;
+  }
+
   Future<NetworkCheckItem> checkUrl(NetworkCheckItem item) async {
     try {
       final response = await _dio.head(item.url);
@@ -162,10 +226,12 @@ class NetworkService extends GetxService {
 
   Future<List<NetworkCheckItem>> checkAllUrls({
     Function(NetworkCheckItem)? onProgress,
+    List<NetworkCheckItem>? urls,
   }) async {
+    final itemsToCheck = urls ?? _criticalUrls;
     final results = <NetworkCheckItem>[];
 
-    for (final item in _criticalUrls) {
+    for (final item in itemsToCheck) {
       onProgress?.call(item.copyWith(status: CheckStatus.running));
       final result = await checkUrl(item);
       results.add(result);
