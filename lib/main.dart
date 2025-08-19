@@ -26,7 +26,7 @@ class FlutterPingApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
-      title: 'Flutter System Check',
+      title: 'Flutter Ping',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.darkTheme,
       initialRoute: AppPages.initial,

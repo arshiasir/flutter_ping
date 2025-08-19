@@ -119,7 +119,7 @@ class CheckResultCard extends StatelessWidget {
                 ),
               ),
               child: SelectableText(
-                errorMessage!,
+                _formatErrorMessage(errorMessage!),
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: AppTheme.error,
                   fontFamily: 'monospace',
@@ -167,6 +167,34 @@ class CheckResultCard extends StatelessWidget {
         duration: Duration(seconds: 2),
       ),
     );
+  }
+
+  String _formatErrorMessage(String errorMessage) {
+    if (errorMessage.contains('Flutter command not found in PATH')) {
+      return '''$errorMessage
+
+💡 Troubleshooting Steps:
+1. Verify Flutter is installed and working in terminal/command prompt
+2. Check that Flutter's bin directory is in your system PATH
+3. Restart this application after verifying Flutter access
+4. On Windows, try running as administrator if needed
+
+To test Flutter access:
+• Open Command Prompt/Terminal
+• Run: flutter --version
+• If this works, restart the app''';
+    } else if (errorMessage.contains('ProcessException')) {
+      return '''$errorMessage
+
+💡 This indicates a system-level issue:
+1. Flutter executable not found by the system
+2. Permissions issue preventing command execution
+3. PATH environment variable not accessible to this app
+
+Try restarting the application or your computer.''';
+    }
+
+    return errorMessage;
   }
 }
 

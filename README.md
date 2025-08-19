@@ -210,9 +210,12 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ### Common Issues
 
-**Flutter command not found**
-- Ensure Flutter is installed and added to your PATH
-- Restart your terminal/IDE after installation
+**Flutter command not found (ProcessException)**
+- This is the most common issue when Flutter works in terminal but not in the app
+- **Quick Fix**: Open Command Prompt, run `flutter --version`, then restart this app
+- Ensure Flutter's bin directory is in your system PATH environment variable
+- On Windows, try running the app as administrator
+- Restart your computer if you recently modified PATH variables
 
 **Network checks failing**
 - Check your internet connection

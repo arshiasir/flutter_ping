@@ -6,23 +6,68 @@ import '../models/url_model.dart';
 class FlutterService extends GetxService {
   static FlutterService get instance => Get.find<FlutterService>();
 
+  // Try different ways to find and execute Flutter command
+  Future<ProcessResult?> _runFlutterCommand(List<String> arguments) async {
+    final possibleCommands = [
+      'flutter', // Standard command
+      'flutter.bat', // Windows batch file
+      'flutter.cmd', // Windows command file
+    ];
+
+    // Also try with full paths if FLUTTER_ROOT is set
+    final flutterRoot = Platform.environment['FLUTTER_ROOT'];
+    if (flutterRoot != null) {
+      possibleCommands.addAll([
+        '$flutterRoot/bin/flutter',
+        '$flutterRoot/bin/flutter.bat',
+        '$flutterRoot/bin/flutter.cmd',
+      ]);
+    }
+
+    // Try common Flutter installation paths
+    if (Platform.isWindows) {
+      final userProfile = Platform.environment['USERPROFILE'];
+      if (userProfile != null) {
+        possibleCommands.addAll([
+          '$userProfile/fvm/default/bin/flutter.bat', // FVM
+          '$userProfile/flutter/bin/flutter.bat', // Direct install
+          'C:/flutter/bin/flutter.bat', // Global install
+        ]);
+      }
+    }
+
+    for (final command in possibleCommands) {
+      try {
+        final result = await Process.run(command, arguments);
+        return result; // Return first successful attempt
+      } catch (e) {
+        // Continue to next command
+        continue;
+      }
+    }
+
+    return null; // All attempts failed
+  }
+
   Future<FlutterInfo> getFlutterVersion() async {
     try {
-      final result = await Process.run('flutter', ['--version']);
+      final result = await _runFlutterCommand(['--version']);
 
-      if (result.exitCode == 0) {
+      if (result != null && result.exitCode == 0) {
         final output = result.stdout.toString();
         return _parseFlutterVersion(output);
       } else {
         return FlutterInfo(
           isInstalled: false,
-          errorMessage: 'Flutter command failed: ${result.stderr}',
+          errorMessage: result != null
+              ? 'Flutter command failed: ${result.stderr}'
+              : 'Flutter command not found in PATH',
         );
       }
     } catch (e) {
       return FlutterInfo(
         isInstalled: false,
-        errorMessage: 'Flutter not found: $e',
+        errorMessage: 'Flutter not accessible: $e',
       );
     }
   }
@@ -66,19 +111,46 @@ class FlutterService extends GetxService {
 
   Future<FlutterDoctorResult> runFlutterDoctor() async {
     try {
-      final result = await Process.run('flutter', ['doctor', '-v']);
-      final output = result.stdout.toString();
+      final result = await _runFlutterCommand(['doctor', '-v']);
 
-      final issues = _parseDoctorOutput(output);
-      final isHealthy = issues
-          .where((issue) => issue.severity == 'error')
-          .isEmpty;
+      if (result != null && result.exitCode == 0) {
+        final output = result.stdout.toString();
+        final issues = _parseDoctorOutput(output);
+        final isHealthy = issues
+            .where((issue) => issue.severity == 'error')
+            .isEmpty;
 
-      return FlutterDoctorResult(
-        isHealthy: isHealthy,
-        issues: issues,
-        rawOutput: output,
-      );
+        return FlutterDoctorResult(
+          isHealthy: isHealthy,
+          issues: issues,
+          rawOutput: output,
+        );
+      } else {
+        // Try without -v flag as fallback
+        final fallbackResult = await _runFlutterCommand(['doctor']);
+        if (fallbackResult != null && fallbackResult.exitCode == 0) {
+          final output = fallbackResult.stdout.toString();
+          final issues = _parseDoctorOutput(output);
+          final isHealthy = issues
+              .where((issue) => issue.severity == 'error')
+              .isEmpty;
+
+          return FlutterDoctorResult(
+            isHealthy: isHealthy,
+            issues: issues,
+            rawOutput: output,
+          );
+        } else {
+          return FlutterDoctorResult(
+            isHealthy: false,
+            issues: [],
+            rawOutput: '',
+            errorMessage: result != null
+                ? 'Flutter doctor failed: ${result.stderr}'
+                : 'Flutter command not found in PATH',
+          );
+        }
+      }
     } catch (e) {
       return FlutterDoctorResult(
         isHealthy: false,
@@ -154,31 +226,44 @@ class FlutterService extends GetxService {
 
   Future<CheckResult> checkForUpdates() async {
     try {
-      final result = await Process.run('flutter', ['upgrade', '--dry-run']);
-      final output = result.stdout.toString();
+      final result = await _runFlutterCommand(['upgrade', '--dry-run']);
 
-      if (output.contains('Flutter is already up to date')) {
-        return CheckResult(
-          name: 'Flutter Updates',
-          description: 'Check for available Flutter updates',
-          status: CheckStatus.success,
-          details: 'Flutter is up to date',
-          timestamp: DateTime.now(),
-        );
-      } else if (output.contains('A new version of Flutter is available')) {
-        return CheckResult(
-          name: 'Flutter Updates',
-          description: 'Check for available Flutter updates',
-          status: CheckStatus.warning,
-          details: 'Updates are available:\n$output',
-          timestamp: DateTime.now(),
-        );
+      if (result != null && result.exitCode == 0) {
+        final output = result.stdout.toString();
+
+        if (output.contains('Flutter is already up to date')) {
+          return CheckResult(
+            name: 'Flutter Updates',
+            description: 'Check for available Flutter updates',
+            status: CheckStatus.success,
+            details: 'Flutter is up to date',
+            timestamp: DateTime.now(),
+          );
+        } else if (output.contains('A new version of Flutter is available')) {
+          return CheckResult(
+            name: 'Flutter Updates',
+            description: 'Check for available Flutter updates',
+            status: CheckStatus.warning,
+            details: 'Updates are available:\n$output',
+            timestamp: DateTime.now(),
+          );
+        } else {
+          return CheckResult(
+            name: 'Flutter Updates',
+            description: 'Check for available Flutter updates',
+            status: CheckStatus.success,
+            details: output,
+            timestamp: DateTime.now(),
+          );
+        }
       } else {
         return CheckResult(
           name: 'Flutter Updates',
           description: 'Check for available Flutter updates',
-          status: CheckStatus.success,
-          details: output,
+          status: CheckStatus.failed,
+          errorMessage: result != null
+              ? 'Update check failed: ${result.stderr}'
+              : 'Flutter command not found in PATH',
           timestamp: DateTime.now(),
         );
       }
@@ -195,23 +280,21 @@ class FlutterService extends GetxService {
 
   Future<List<PubPackageInfo>> checkPubOutdated() async {
     try {
-      final result = await Process.run('flutter', [
-        'pub',
-        'outdated',
-        '--json',
-      ]);
+      final result = await _runFlutterCommand(['pub', 'outdated', '--json']);
 
-      if (result.exitCode != 0) {
+      if (result != null && result.exitCode == 0) {
+        // Parse JSON output if available
+        return _parsePubOutdatedJson(result.stdout.toString());
+      } else {
         // Try without --json flag
-        final fallbackResult = await Process.run('flutter', [
-          'pub',
-          'outdated',
-        ]);
-        return _parsePubOutdatedText(fallbackResult.stdout.toString());
+        final fallbackResult = await _runFlutterCommand(['pub', 'outdated']);
+
+        if (fallbackResult != null && fallbackResult.exitCode == 0) {
+          return _parsePubOutdatedText(fallbackResult.stdout.toString());
+        }
       }
 
-      // Parse JSON output if available
-      return _parsePubOutdatedJson(result.stdout.toString());
+      return [];
     } catch (e) {
       return [];
     }

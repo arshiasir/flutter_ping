@@ -13,28 +13,41 @@ class HomePage extends GetView<HomeController> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Flutter System Check'),
+        title: Row(
+          children: [
+            Image.asset('assets/images/icon.png', width: 32, height: 32),
+            const SizedBox(width: 8),
+            const Text('Flutter Ping'),
+          ],
+        ),
+        centerTitle: true,
         actions: [
-          Obx(() => IconButton(
-            onPressed: controller.isRunningChecks ? null : controller.clearResults,
-            icon: const Icon(Icons.clear_all),
-            tooltip: 'Clear Results',
-          )),
+          Obx(
+            () => IconButton(
+              onPressed: controller.isRunningChecks
+                  ? null
+                  : controller.clearResults,
+              icon: const Icon(Icons.clear_all),
+              tooltip: 'Clear Results',
+            ),
+          ),
         ],
       ),
       body: Obx(() => _buildBody(context)),
-      floatingActionButton: Obx(() => FloatingActionButton.extended(
-        onPressed: controller.isRunningChecks ? null : controller.runAllChecks,
-        icon: Icon(
-          controller.isRunningChecks ? Icons.refresh : Icons.play_arrow,
+      floatingActionButton: Obx(
+        () => FloatingActionButton.extended(
+          onPressed: controller.isRunningChecks
+              ? null
+              : controller.runAllChecks,
+          icon: Icon(
+            controller.isRunningChecks ? Icons.refresh : Icons.play_arrow,
+          ),
+          label: Text(controller.isRunningChecks ? 'Running...' : 'Run Checks'),
+          backgroundColor: controller.isRunningChecks
+              ? AppTheme.textTertiary
+              : AppTheme.primaryColor,
         ),
-        label: Text(
-          controller.isRunningChecks ? 'Running...' : 'Run Checks',
-        ),
-        backgroundColor: controller.isRunningChecks 
-            ? AppTheme.textTertiary 
-            : AppTheme.primaryColor,
-      )),
+      ),
     );
   }
 
@@ -49,18 +62,18 @@ class HomePage extends GetView<HomeController> {
           children: [
             _buildOverallStatus(context),
             const SizedBox(height: 24),
-            
+
             if (controller.isRunningChecks) ...[
               _buildProgressSection(context),
               const SizedBox(height: 24),
             ],
-            
+
             _buildNetworkSection(context),
             const SizedBox(height: 24),
-            
+
             _buildFlutterSection(context),
             const SizedBox(height: 24),
-            
+
             _buildDoctorSection(context),
             const SizedBox(height: 100), // Space for FAB
           ],
@@ -78,20 +91,20 @@ class HomePage extends GetView<HomeController> {
             Row(
               children: [
                 Icon(
-                  controller.hasErrors 
+                  controller.hasErrors
                       ? Icons.error
                       : controller.hasWarnings
-                          ? Icons.warning
-                          : controller.overallProgress > 0
-                              ? Icons.check_circle
-                              : Icons.info,
+                      ? Icons.warning
+                      : controller.overallProgress > 0
+                      ? Icons.check_circle
+                      : Icons.info,
                   color: controller.hasErrors
                       ? AppTheme.error
                       : controller.hasWarnings
-                          ? AppTheme.warning
-                          : controller.overallProgress > 0
-                              ? AppTheme.success
-                              : AppTheme.info,
+                      ? AppTheme.warning
+                      : controller.overallProgress > 0
+                      ? AppTheme.success
+                      : AppTheme.info,
                   size: 32,
                 ),
                 const SizedBox(width: 16),
@@ -118,7 +131,9 @@ class HomePage extends GetView<HomeController> {
               LinearProgressIndicator(
                 value: controller.overallProgress,
                 backgroundColor: AppTheme.elevatedSurface,
-                valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.primaryColor),
+                valueColor: const AlwaysStoppedAnimation<Color>(
+                  AppTheme.primaryColor,
+                ),
               ),
             ],
           ],
@@ -151,24 +166,26 @@ class HomePage extends GetView<HomeController> {
           Icons.wifi,
         ),
         const SizedBox(height: 12),
-        
+
         if (controller.networkResults.isEmpty && !controller.isRunningChecks)
           _buildEmptyState('No network checks performed yet')
         else
-          ...controller.networkResults.map((item) => Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: NetworkCheckCard(
-              item: item,
-              onRetry: () => controller.retryNetworkCheck(item),
+          ...controller.networkResults.map(
+            (item) => Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: NetworkCheckCard(
+                item: item,
+                onRetry: () => controller.retryNetworkCheck(item),
+              ),
             ),
-          )),
+          ),
       ],
     );
   }
 
   Widget _buildFlutterSection(BuildContext context) {
     final flutterInfo = controller.flutterInfo;
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -179,14 +196,16 @@ class HomePage extends GetView<HomeController> {
           Icons.developer_board,
         ),
         const SizedBox(height: 12),
-        
+
         if (flutterInfo == null && !controller.isRunningChecks)
           _buildEmptyState('Flutter SDK not checked yet')
         else if (flutterInfo != null)
           CheckResultCard(
             title: 'Flutter SDK ${flutterInfo.version ?? 'Unknown'}',
             description: 'Flutter development framework',
-            status: flutterInfo.isInstalled ? CheckStatus.success : CheckStatus.failed,
+            status: flutterInfo.isInstalled
+                ? CheckStatus.success
+                : CheckStatus.failed,
             details: 'Flutter SDK details would go here',
             errorMessage: flutterInfo.errorMessage,
           ),
@@ -196,7 +215,7 @@ class HomePage extends GetView<HomeController> {
 
   Widget _buildDoctorSection(BuildContext context) {
     final doctorResult = controller.doctorResult;
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -207,18 +226,18 @@ class HomePage extends GetView<HomeController> {
           Icons.medical_services,
         ),
         const SizedBox(height: 12),
-        
+
         if (doctorResult == null && !controller.isRunningChecks)
           _buildEmptyState('Flutter doctor not run yet')
         else if (doctorResult != null)
           CheckResultCard(
             title: 'Development Environment',
             description: 'Flutter doctor comprehensive check',
-            status: doctorResult.isHealthy 
-                ? CheckStatus.success 
+            status: doctorResult.isHealthy
+                ? CheckStatus.success
                 : doctorResult.issues.any((i) => i.severity == 'error')
-                    ? CheckStatus.failed
-                    : CheckStatus.warning,
+                ? CheckStatus.failed
+                : CheckStatus.warning,
             details: doctorResult.rawOutput,
             errorMessage: doctorResult.errorMessage,
             onRetry: controller.retryFlutterDoctor,
@@ -241,14 +260,8 @@ class HomePage extends GetView<HomeController> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                title,
-                style: Theme.of(context).textTheme.headlineSmall,
-              ),
-              Text(
-                description,
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
+              Text(title, style: Theme.of(context).textTheme.headlineSmall),
+              Text(description, style: Theme.of(context).textTheme.bodySmall),
             ],
           ),
         ),
@@ -263,18 +276,11 @@ class HomePage extends GetView<HomeController> {
         child: Center(
           child: Column(
             children: [
-              Icon(
-                Icons.info_outline,
-                size: 48,
-                color: AppTheme.textTertiary,
-              ),
+              Icon(Icons.info_outline, size: 48, color: AppTheme.textTertiary),
               const SizedBox(height: 12),
               Text(
                 message,
-                style: TextStyle(
-                  color: AppTheme.textTertiary,
-                  fontSize: 14,
-                ),
+                style: TextStyle(color: AppTheme.textTertiary, fontSize: 14),
               ),
             ],
           ),
