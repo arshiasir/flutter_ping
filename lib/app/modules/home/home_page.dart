@@ -6,7 +6,6 @@ import '../../ui/widgets/status_indicator.dart';
 import '../../ui/widgets/check_result_card.dart';
 import '../../ui/widgets/version_manager_widget.dart';
 import '../../ui/widgets/custom_title_bar.dart';
-import '../../ui/widgets/window_demo_widget.dart';
 import '../../data/models/url_model.dart';
 import '../../data/models/version_model.dart';
 import '../../data/services/version_service.dart';
@@ -69,8 +68,6 @@ class HomePage extends GetView<HomeController> {
             const SizedBox(height: 24),
 
             _buildVersionManagerSection(),
-            const SizedBox(height: 24),
-            _buildWindowDemoSection(),
             const SizedBox(height: 100), // Space for FAB
           ],
         ),
@@ -468,10 +465,6 @@ class HomePage extends GetView<HomeController> {
 
   Widget _buildVersionManagerSection() {
     return const VersionManagerWidget();
-  }
-
-  Widget _buildWindowDemoSection() {
-    return const WindowDemoWidget();
   }
 
   Widget _buildEffectiveVersionsDisplay(

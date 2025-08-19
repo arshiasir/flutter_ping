@@ -23,10 +23,10 @@ class CustomTitleBar extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 child: Row(
                   children: [
-                    Icon(
-                      Icons.wifi_find,
-                      size: 16,
-                      color: Theme.of(context).primaryColor,
+                    Image.asset(
+                      'assets/images/icon.png',
+                      width: 24,
+                      height: 24,
                     ),
                     const SizedBox(width: 8),
                     Text(
