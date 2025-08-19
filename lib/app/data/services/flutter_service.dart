@@ -5,18 +5,20 @@ import '../models/url_model.dart';
 
 class FlutterService extends GetxService {
   static FlutterService get instance => Get.find<FlutterService>();
+  
+  final Shell __shell = Shell();
 
   Future<FlutterInfo> getFlutterVersion() async {
     try {
-      final result = await run('flutter', ['--version'], verbose: false);
+      final result = await _shell.run('flutter --version');
       
-      if (result.exitCode == 0) {
-        final output = result.stdout.toString();
+      if (result.isNotEmpty && result.first.exitCode == 0) {
+        final output = result.first.stdout.toString();
         return _parseFlutterVersion(output);
       } else {
         return FlutterInfo(
           isInstalled: false,
-          errorMessage: 'Flutter command failed: ${result.stderr}',
+          errorMessage: 'Flutter command failed: ${result.isNotEmpty ? result.first.stderr : 'No output'}',
         );
       }
     } catch (e) {
@@ -63,8 +65,8 @@ class FlutterService extends GetxService {
 
   Future<FlutterDoctorResult> runFlutterDoctor() async {
     try {
-      final result = await run('flutter', ['doctor', '-v'], verbose: false);
-      final output = result.stdout.toString();
+      final result = await _shell.run('flutter doctor -v');
+      final output = result.first.stdout.toString();
       
       final issues = _parseDoctorOutput(output);
       final isHealthy = issues.where((issue) => issue.severity == 'error').isEmpty;
@@ -143,8 +145,8 @@ class FlutterService extends GetxService {
 
   Future<CheckResult> checkForUpdates() async {
     try {
-      final result = await run('flutter', ['upgrade', '--dry-run'], verbose: false);
-      final output = result.stdout.toString();
+      final result = await _shell.run('flutter upgrade --dry-run');
+      final output = result.first.stdout.toString();
       
       if (output.contains('Flutter is already up to date')) {
         return CheckResult(
@@ -184,16 +186,16 @@ class FlutterService extends GetxService {
 
   Future<List<PubPackageInfo>> checkPubOutdated() async {
     try {
-      final result = await run('flutter', ['pub', 'outdated', '--json'], verbose: false);
+      final result = await _shell.run('flutter pub outdated --json');
       
-      if (result.exitCode != 0) {
+      if (result.isEmpty || result.first.exitCode != 0) {
         // Try without --json flag
-        final fallbackResult = await run('flutter', ['pub', 'outdated'], verbose: false);
-        return _parsePubOutdatedText(fallbackResult.stdout.toString());
+        final fallbackResult = await _shell.run('flutter pub outdated');
+        return _parsePubOutdatedText(fallbackResult.first.stdout.toString());
       }
       
       // Parse JSON output if available
-      return _parsePubOutdatedJson(result.stdout.toString());
+      return _parsePubOutdatedJson(result.first.stdout.toString());
     } catch (e) {
       return [];
     }
