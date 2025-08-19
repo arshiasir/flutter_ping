@@ -167,19 +167,43 @@ class HomePage extends GetView<HomeController> {
 
   Widget _buildNetworkSection(BuildContext context) {
     return Column(
+      spacing: 16,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionHeader(
-          context,
-          'Network Connectivity',
-          'Testing access to essential Flutter development resources',
-          Icons.wifi,
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.wifi, size: 24, color: AppTheme.primaryColor),
+                const SizedBox(width: 12),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Network Connectivity',
+                      style: Theme.of(context).textTheme.headlineSmall,
+                    ),
+                    Text(
+                      'Testing access to essential Flutter development resources',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            IconButton(
+              onPressed: () => controller.isVersionManagerOpen.value =
+                  !controller.isVersionManagerOpen.value,
+              icon: const Icon(Icons.settings, size: 24),
+            ),
+          ],
         ),
-        const SizedBox(height: 12),
-
-        // Version controls for network tests
-        _buildNetworkVersionControls(context),
-        const SizedBox(height: 16),
+        Obx(
+          () => controller.isVersionManagerOpen.value
+              ? _buildNetworkVersionControls(context)
+              : const SizedBox.shrink(),
+        ),
 
         if (controller.networkResults.isEmpty && !controller.isRunningChecks)
           _buildEmptyState('No network checks performed yet')

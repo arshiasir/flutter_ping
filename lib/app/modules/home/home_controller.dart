@@ -40,6 +40,9 @@ class HomeController extends GetxController {
   String get currentCheckName => _currentCheckName.value;
   double get overallProgress => _overallProgress.value;
 
+  // Version Manager
+  RxBool  isVersionManagerOpen = false.obs;
+
   // Computed properties
   bool get hasNetworkIssues =>
       _networkResults.any((item) => item.status == CheckStatus.failed);
