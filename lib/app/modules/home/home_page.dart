@@ -9,6 +9,7 @@ import '../../ui/widgets/custom_title_bar.dart';
 import '../../data/models/url_model.dart';
 import '../../data/models/version_model.dart';
 import '../../data/services/version_service.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class HomePage extends GetView<HomeController> {
   const HomePage({super.key});
@@ -69,6 +70,21 @@ class HomePage extends GetView<HomeController> {
 
             _buildVersionManagerSection(),
             const SizedBox(height: 100), // Space for FAB
+            Row(
+              spacing: 16,
+              children: [
+                Text("Source Code", style: Get.theme.textTheme.bodySmall),
+                TextButton(
+                  onPressed: () {
+                    launchUrl(
+                      Uri.parse('https://github.com/arshiasir/flutter_ping'),
+                    );
+                  },
+                  child: const Text('GitHub'),
+                ),
+                Text("Version: 1.0.0", style: Get.theme.textTheme.bodySmall),
+              ],
+            ),
           ],
         ),
       ),

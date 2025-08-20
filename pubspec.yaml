@@ -62,6 +62,7 @@ dependencies:
   
   # Desktop window customization
   bitsdojo_window: ^0.1.6
+  url_launcher: ^6.3.2
 
 
 
