@@ -23,6 +23,7 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.35.1'
+
       - name: Install dependencies
         run: flutter pub get
 
@@ -39,202 +40,173 @@ jobs:
             flutter build windows --release
           fi
 
-      - name: Upload Windows build
+      # Package per-OS native installer
+      - name: Package Windows .exe installer
         if: matrix.os == 'windows-latest'
-        uses: actions/upload-artifact@v4
-        with:
-          name: windows-build
-          path: build/windows/runner/Release/*
-
-      - name: Upload Linux build
-        if: matrix.os == 'ubuntu-latest'
-        uses: actions/upload-artifact@v4
-        with:
-          name: linux-build
-          path: build/linux/x64/release/bundle/*
-
-      - name: Upload macOS build
-        if: matrix.os == 'macos-latest'
-        uses: actions/upload-artifact@v4
-        with:
-          name: macos-build
-          path: build/macos/Build/Products/Release/*
-
-  create-installers:
-    needs: build
-    if: startsWith(github.ref, 'refs/tags/')
-    runs-on: ubuntu-latest
-    
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Download all artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: artifacts
-      
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.35.1'
-      
-      - name: Install dependencies
-        run: flutter pub get
-      
-      - name: Create Windows EXE installer
+        shell: pwsh
         run: |
-          mkdir -p installers
-          # Install NSIS for creating Windows installers
-          sudo apt-get update -y
-          sudo apt-get install -y nsis
-          
-          # Create NSIS script for Windows installer
-          cat > installers/installer.nsi << 'EOF'
+          choco install nsis -y
+          New-Item -ItemType Directory -Force -Path installers | Out-Null
+          $releaseDir = "build/windows/x64/runner/Release"
+          if (!(Test-Path $releaseDir)) { $releaseDir = "build/windows/runner/Release" }
+          if (!(Test-Path "$releaseDir/flutter_ping.exe")) { throw "flutter_ping.exe not found in $releaseDir" }
+
+          # Prepare payload directory for NSIS to include
+          New-Item -ItemType Directory -Force -Path payload_win | Out-Null
+          Copy-Item -Recurse -Force "$releaseDir/*" "payload_win/"
+
+          $nsis = @'
           !define APPNAME "Flutter Ping"
           !define COMPANYNAME "Your Company"
-          !define DESCRIPTION "A Flutter network ping application"
           !define VERSIONMAJOR 1
           !define VERSIONMINOR 0
           !define VERSIONBUILD 0
-          !define HELPURL "https://github.com/yourusername/flutter_ping"
-          !define UPDATEURL "https://github.com/yourusername/flutter_ping"
-          !define ABOUTURL "https://github.com/yourusername/flutter_ping"
-          !define INSTALLSIZE 50000
-          
+
           RequestExecutionLevel admin
           InstallDir "$PROGRAMFILES\${APPNAME}"
-          InstallDirRegKey HKCU "Software\${APPNAME}" ""
-          
+
           !include "MUI2.nsh"
-          
+
           Name "${APPNAME}"
           OutFile "flutter-ping-windows-installer.exe"
-          
+
           !define MUI_ABORTWARNING
-          
+
           !insertmacro MUI_PAGE_WELCOME
           !insertmacro MUI_PAGE_DIRECTORY
           !insertmacro MUI_PAGE_INSTFILES
           !insertmacro MUI_PAGE_FINISH
-          
+
           !insertmacro MUI_UNPAGE_CONFIRM
           !insertmacro MUI_UNPAGE_INSTFILES
-          
+
           !insertmacro MUI_LANGUAGE "English"
-          
+
           Section "MainApplication" SEC_ID
             SetOutPath "$INSTDIR"
-            File /r "artifacts/windows-build\*.*"
-            
-            WriteUninstaller "$INSTDIR\uninstall.exe"
-            
-            CreateDirectory "$SMPROGRAMS\${APPNAME}"
-            CreateShortCut "$SMPROGRAMS\${APPNAME}\${APPNAME}.lnk" "$INSTDIR\flutter_ping.exe"
-            CreateShortCut "$SMPROGRAMS\${APPNAME}\Uninstall.lnk" "$INSTDIR\uninstall.exe"
-            
-            WriteRegStr HKCU "Software\${APPNAME}" "" $INSTDIR
-            WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPNAME}" "DisplayName" "${APPNAME}"
-            WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPNAME}" "UninstallString" "$\"$INSTDIR\uninstall.exe$\""
-            WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPNAME}" "QuietUninstallString" "$\"$INSTDIR\uninstall.exe$\" /S"
-            WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPNAME}" "InstallLocation" "$\"$INSTDIR$\""
-            WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPNAME}" "DisplayIcon" "$\"$INSTDIR\flutter_ping.exe$\""
-            WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPNAME}" "Publisher" "$\"${COMPANYNAME}$\""
-            WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPNAME}" "DisplayVersion" "$\"${VERSIONMAJOR}.${VERSIONMINOR}.${VERSIONBUILD}$\""
-            WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPNAME}" "VersionMajor" ${VERSIONMAJOR}
-            WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPNAME}" "VersionMinor" ${VERSIONMINOR}
-            WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPNAME}" "VersionBuild" ${VERSIONBUILD}
-            WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPNAME}" "EstimatedSize" ${INSTALLSIZE}
-            WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPNAME}" "NoModify" 1
-            WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPNAME}" "NoRepair" 1
+            File /r "payload_win\\*.*"
+            WriteUninstaller "$INSTDIR\\uninstall.exe"
+            CreateDirectory "$SMPROGRAMS\\${APPNAME}"
+            CreateShortCut "$SMPROGRAMS\\${APPNAME}\\${APPNAME}.lnk" "$INSTDIR\\flutter_ping.exe"
+            CreateShortCut "$SMPROGRAMS\\${APPNAME}\\Uninstall.lnk" "$INSTDIR\\uninstall.exe"
           SectionEnd
-          
+
           Section "Uninstall"
-            Delete "$INSTDIR\uninstall.exe"
+            Delete "$INSTDIR\\uninstall.exe"
             RMDir /r "$INSTDIR"
-            
-            Delete "$SMPROGRAMS\${APPNAME}\${APPNAME}.lnk"
-            Delete "$SMPROGRAMS\${APPNAME}\Uninstall.lnk"
-            RMDir "$SMPROGRAMS\${APPNAME}"
-            
-            DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPNAME}"
-            DeleteRegKey HKCU "Software\${APPNAME}"
+            Delete "$SMPROGRAMS\\${APPNAME}\\${APPNAME}.lnk"
+            Delete "$SMPROGRAMS\\${APPNAME}\\Uninstall.lnk"
+            RMDir "$SMPROGRAMS\\${APPNAME}"
           SectionEnd
-          EOF
-          
-          # Create Windows installer
-          makensis installers/installer.nsi
-          mv flutter-ping-windows-installer.exe installers/
-      
-      - name: Create Linux DEB package
+          '@
+          Set-Content -Path installer.nsi -Value $nsis -NoNewline
+          & "C:\Program Files (x86)\NSIS\makensis.exe" installer.nsi | Write-Output
+          Move-Item -Path flutter-ping-windows-installer.exe -Destination installers/ -Force
+
+      - name: Upload Windows installer
+        if: matrix.os == 'windows-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-installer
+          path: installers/flutter-ping-windows-installer.exe
+
+      - name: Package Linux .deb installer
+        if: matrix.os == 'ubuntu-latest'
+        shell: bash
         run: |
-          # Install dpkg-deb for creating DEB packages
+          set -euo pipefail
           sudo apt-get update -y
-          sudo apt-get install -y dpkg-dev
+          sudo apt-get install -y dpkg-dev fakeroot
+          VERSION="${GITHUB_REF_NAME#v}"
+          [[ -z "$VERSION" ]] && VERSION="1.0.0"
+          APPNAME="flutter-ping"
+          PKGROOT="pkg_${APPNAME}_${VERSION}_amd64"
+          mkdir -p "$PKGROOT/DEBIAN"
+          mkdir -p "$PKGROOT/opt/$APPNAME"
+          mkdir -p "$PKGROOT/usr/bin"
+          mkdir -p "$PKGROOT/usr/share/applications"
           
-          # Create DEB package structure
-          mkdir -p flutter-ping_1.0.0_amd64/DEBIAN
-          mkdir -p flutter-ping_1.0.0_amd64/usr/bin
-          mkdir -p flutter-ping_1.0.0_amd64/usr/share/applications
-          mkdir -p flutter-ping_1.0.0_amd64/usr/share/icons/hicolor/256x256/apps
-          
-          # Copy application files
-          cp -r artifacts/linux-build/* flutter-ping_1.0.0_amd64/usr/bin/
-          
-          # Create control file
-          cat > flutter-ping_1.0.0_amd64/DEBIAN/control << 'EOF'
-          Package: flutter-ping
-          Version: 1.0.0
+          BUNDLE_DIR="build/linux/x64/release/bundle"
+          cp -R "$BUNDLE_DIR/"* "$PKGROOT/opt/$APPNAME/"
+
+          cat > "$PKGROOT/usr/bin/$APPNAME" << 'EOF'
+          #!/usr/bin/env bash
+          set -euo pipefail
+          APPDIR="/opt/flutter-ping"
+          cd "$APPDIR"
+          exec "./flutter_ping" "$@"
+          EOF
+          chmod +x "$PKGROOT/usr/bin/$APPNAME"
+
+          cat > "$PKGROOT/DEBIAN/control" << EOF
+          Package: $APPNAME
+          Version: $VERSION
           Section: utils
           Priority: optional
           Architecture: amd64
           Depends: libc6
-          Maintainer: Your Name <your.email@example.com>
-          Description: A Flutter network ping application
-           Flutter Ping is a modern network utility application
-           built with Flutter for cross-platform compatibility.
+          Maintainer: Your Name <you@example.com>
+          Description: Flutter Ping - network utility
+           Flutter Ping is a simple network utility built with Flutter.
           EOF
-          
-          # Create desktop file
-          cat > flutter-ping_1.0.0_amd64/usr/share/applications/flutter-ping.desktop << 'EOF'
+
+          cat > "$PKGROOT/usr/share/applications/$APPNAME.desktop" << EOF
           [Desktop Entry]
           Name=Flutter Ping
-          Comment=A Flutter network ping application
-          Exec=/usr/bin/flutter_ping
-          Icon=flutter-ping
+          Comment=Network utility
+          Exec=$APPNAME
           Terminal=false
           Type=Application
           Categories=Network;Utility;
           EOF
-          
-          # Create DEB package
-          dpkg-deb --build flutter-ping_1.0.0_amd64
-          mv flutter-ping_1.0.0_amd64.deb installers/flutter-ping-linux.deb
-      
-      - name: Create macOS DMG
+
+          fakeroot dpkg-deb --build "$PKGROOT"
+          mkdir -p installers
+          mv "${PKGROOT}.deb" installers/${APPNAME}_${VERSION}_amd64.deb
+
+      - name: Upload Linux installer
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-installer
+          path: installers/*.deb
+
+      - name: Package macOS .dmg installer
+        if: matrix.os == 'macos-latest'
+        shell: bash
         run: |
-          # Install create-dmg for creating DMG files
-          sudo apt-get update -y
-          sudo apt-get install -y create-dmg
-          
-          # Create DMG
-          create-dmg \
-            --volname "Flutter Ping" \
-            --window-pos 200 120 \
-            --window-size 600 300 \
-            --icon-size 100 \
-            --icon "Flutter Ping.app" 175 120 \
-            --hide-extension "Flutter Ping.app" \
-            --app-drop-link 425 120 \
-            "installers/flutter-ping-macos.dmg" \
-            "artifacts/macos-build/"
-      
-      - name: Create release
+          set -euo pipefail
+          APP_PATH=$(ls build/macos/Build/Products/Release/*.app | head -n 1)
+          if [[ -z "$APP_PATH" ]]; then echo "No .app found"; exit 1; fi
+          mkdir -p installers
+          hdiutil create installers/flutter-ping-macos.dmg -volname "Flutter Ping" -srcfolder "$APP_PATH" -ov -format UDZO
+
+      - name: Upload macOS installer
+        if: matrix.os == 'macos-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-installer
+          path: installers/flutter-ping-macos.dmg
+
+  release:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download installers
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+      - name: Show downloaded files
+        run: |
+          ls -R dist | cat
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            installers/flutter-ping-windows-installer.exe
-            installers/flutter-ping-linux.deb
-            installers/flutter-ping-macos.dmg
+            dist/windows-installer/*
+            dist/linux-installer/*
+            dist/macos-installer/*
           draft: false
           prerelease: false
         env:
