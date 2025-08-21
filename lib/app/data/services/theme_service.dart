@@ -22,6 +22,7 @@ class ThemeService extends GetxService {
     } else {
       setThemeMode(ThemeMode.dark);
     }
+    Get.forceAppUpdate();
   }
 
   Future<void> setThemeMode(ThemeMode mode) async {
