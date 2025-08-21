@@ -499,9 +499,11 @@ class HomePage extends GetView<HomeController> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppTheme.elevatedSurface.withValues(alpha: 0.3),
+        color: Get.theme.colorScheme.surface.withOpacity(0.3),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppTheme.textTertiary.withValues(alpha: 0.2)),
+        border: Border.all(
+          color: Get.theme.colorScheme.onSurface.withOpacity(0.2),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -510,7 +512,7 @@ class HomePage extends GetView<HomeController> {
             'Current Network Test Versions:',
             style: Get.theme.textTheme.bodySmall?.copyWith(
               fontWeight: FontWeight.w600,
-              color: AppTheme.textSecondary,
+              color: Get.theme.colorScheme.onSurface.withOpacity(0.7),
             ),
           ),
           const SizedBox(height: 8),

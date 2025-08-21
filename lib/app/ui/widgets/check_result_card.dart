@@ -70,7 +70,7 @@ class CheckResultCard extends StatelessWidget {
                 color: Get.theme.colorScheme.surface,
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                  color: AppTheme.textTertiary.withValues(alpha: 0.3),
+                  color: Get.theme.colorScheme.onSurface.withOpacity(0.2),
                 ),
               ),
               child: SelectableText(

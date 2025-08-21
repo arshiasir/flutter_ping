@@ -55,7 +55,7 @@ class FlutterPathHelper extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppTheme.elevatedSurface,
+        color: Get.theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: AppTheme.warning.withValues(alpha: 0.3)),
       ),
@@ -70,9 +70,18 @@ class FlutterPathHelper extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          const Text('1. Open Command Prompt or PowerShell'),
-          const Text('2. Run: flutter --version'),
-          const Text('3. If it works, close and restart this app'),
+          Text(
+            '1. Open Command Prompt or PowerShell',
+            style: Get.theme.textTheme.bodySmall,
+          ),
+          Text(
+            '2. Run: flutter --version',
+            style: Get.theme.textTheme.bodySmall,
+          ),
+          Text(
+            '3. If it works, close and restart this app',
+            style: Get.theme.textTheme.bodySmall,
+          ),
           const SizedBox(height: 12),
           Row(
             children: [
@@ -153,12 +162,7 @@ class FlutterPathHelper extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 4),
-                Text(
-                  description,
-                  style: Get.theme.textTheme.bodySmall?.copyWith(
-                    color: AppTheme.textSecondary,
-                  ),
-                ),
+                Text(description, style: Get.theme.textTheme.bodySmall),
               ],
             ),
           ),
