@@ -244,8 +244,7 @@ class VersionManagerWidget extends StatelessWidget {
           icon: const Icon(Icons.clear, size: 18),
           tooltip: 'Use detected version',
           style: IconButton.styleFrom(
-            backgroundColor:
-                Get.theme.colorScheme.onSurface.withOpacity(0.06),
+            backgroundColor: Get.theme.colorScheme.onSurface.withOpacity(0.06),
             padding: const EdgeInsets.all(8),
           ),
         ),

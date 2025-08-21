@@ -466,11 +466,18 @@ class HomePage extends GetView<HomeController> {
         child: Center(
           child: Column(
             children: [
-              Icon(Icons.info_outline, size: 48, color: AppTheme.textTertiary),
+              Icon(
+                Icons.info_outline,
+                size: 48,
+                color: Get.theme.colorScheme.onSurface.withOpacity(0.5),
+              ),
               const SizedBox(height: 12),
               Text(
                 message,
-                style: TextStyle(color: AppTheme.textTertiary, fontSize: 14),
+                style: TextStyle(
+                  color: Get.theme.colorScheme.onSurface.withOpacity(0.6),
+                  fontSize: 14,
+                ),
               ),
             ],
           ),
