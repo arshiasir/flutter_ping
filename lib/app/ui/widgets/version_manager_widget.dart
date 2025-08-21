@@ -42,11 +42,18 @@ class VersionManagerWidget extends StatelessWidget {
         child: Center(
           child: Column(
             children: [
-              Icon(Icons.info_outline, size: 48, color: AppTheme.textTertiary),
+              Icon(
+                Icons.info_outline,
+                size: 48,
+                color: Get.theme.colorScheme.onSurface.withOpacity(0.5),
+              ),
               const SizedBox(height: 12),
               Text(
                 'No tool versions detected yet',
-                style: TextStyle(color: AppTheme.textTertiary, fontSize: 14),
+                style: TextStyle(
+                  color: Get.theme.colorScheme.onSurface.withOpacity(0.6),
+                  fontSize: 14,
+                ),
               ),
               const SizedBox(height: 16),
               ElevatedButton.icon(
@@ -137,7 +144,7 @@ class VersionManagerWidget extends StatelessWidget {
                 toolVersion.detectedVersion ?? 'Not detected',
                 toolVersion.detectedVersion != null
                     ? AppTheme.success
-                    : AppTheme.textTertiary,
+                    : Get.theme.colorScheme.onSurface.withOpacity(0.5),
               ),
             ),
             const SizedBox(width: 16),
@@ -147,7 +154,7 @@ class VersionManagerWidget extends StatelessWidget {
                 toolVersion.preferredVersion ?? 'Auto',
                 toolVersion.preferredVersion != null
                     ? AppTheme.primaryColor
-                    : AppTheme.textSecondary,
+                    : Get.theme.colorScheme.onSurface.withOpacity(0.7),
               ),
             ),
             const SizedBox(width: 16),
@@ -157,7 +164,7 @@ class VersionManagerWidget extends StatelessWidget {
                 toolVersion.effectiveVersion ?? 'Not set',
                 toolVersion.effectiveVersion != null
                     ? AppTheme.info
-                    : AppTheme.textTertiary,
+                    : Get.theme.colorScheme.onSurface.withOpacity(0.5),
               ),
             ),
           ],
@@ -167,7 +174,7 @@ class VersionManagerWidget extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: AppTheme.elevatedSurface,
+              color: Get.theme.colorScheme.surface,
               borderRadius: BorderRadius.circular(4),
             ),
             child: Text(
@@ -237,7 +244,8 @@ class VersionManagerWidget extends StatelessWidget {
           icon: const Icon(Icons.clear, size: 18),
           tooltip: 'Use detected version',
           style: IconButton.styleFrom(
-            backgroundColor: AppTheme.textTertiary.withValues(alpha: 0.1),
+            backgroundColor:
+                Get.theme.colorScheme.onSurface.withOpacity(0.06),
             padding: const EdgeInsets.all(8),
           ),
         ),

@@ -35,7 +35,7 @@ class HomePage extends GetView<HomeController> {
           ),
           label: Text(controller.isRunningChecks ? 'Running...' : 'Run Checks'),
           backgroundColor: controller.isRunningChecks
-              ? AppTheme.textTertiary
+              ? Get.theme.colorScheme.surface
               : AppTheme.primaryColor,
         ),
       ),
@@ -139,7 +139,7 @@ class HomePage extends GetView<HomeController> {
               const SizedBox(height: 16),
               LinearProgressIndicator(
                 value: controller.overallProgress,
-                backgroundColor: AppTheme.elevatedSurface,
+                backgroundColor: Get.theme.colorScheme.surface,
                 valueColor: const AlwaysStoppedAnimation<Color>(
                   AppTheme.primaryColor,
                 ),
@@ -358,7 +358,7 @@ class HomePage extends GetView<HomeController> {
             child: Text(
               'Detected: ${toolVersion!.detectedVersion}',
               style: Get.theme.textTheme.bodySmall?.copyWith(
-                color: AppTheme.textSecondary,
+                color: Get.theme.colorScheme.onSurface.withOpacity(0.7),
               ),
             ),
           ),

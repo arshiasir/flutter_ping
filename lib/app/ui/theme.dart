@@ -199,6 +199,178 @@ class AppTheme {
     );
   }
 
+  static ThemeData get lightTheme {
+    const Color surfaceLight = Color(0xFFF5F5F7);
+    const Color cardLight = Colors.white;
+    const Color textPrimaryLight = Color(0xFF1A1A1A);
+    const Color textSecondaryLight = Color(0xFF444444);
+    const Color textTertiaryLight = Color(0xFF777777);
+
+    return ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.light,
+
+      colorScheme: const ColorScheme.light(
+        primary: primaryColor,
+        primaryContainer: primaryVariant,
+        secondary: secondary,
+        secondaryContainer: secondaryVariant,
+        surface: surfaceLight,
+        error: error,
+        onPrimary: Colors.white,
+        onSecondary: Colors.white,
+        onSurface: textPrimaryLight,
+        onError: Colors.white,
+      ),
+
+      scaffoldBackgroundColor: Colors.white,
+
+      appBarTheme: const AppBarTheme(
+        backgroundColor: Colors.white,
+        foregroundColor: textPrimaryLight,
+        elevation: 0,
+        centerTitle: true,
+        titleTextStyle: TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.w600,
+          color: textPrimaryLight,
+        ),
+      ),
+
+      cardTheme: CardThemeData(
+        color: cardLight,
+        elevation: 2,
+        shadowColor: Colors.black.withValues(alpha: 0.08),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: primaryColor,
+          foregroundColor: Colors.white,
+          elevation: 0,
+          shadowColor: Colors.transparent,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        ),
+      ),
+
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: primaryColor,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        ),
+      ),
+
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: primaryColor,
+          side: const BorderSide(color: primaryColor),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        ),
+      ),
+
+      iconTheme: const IconThemeData(color: textSecondaryLight, size: 24),
+
+      progressIndicatorTheme: const ProgressIndicatorThemeData(
+        color: primaryColor,
+        linearTrackColor: Color(0xFFE6E6EA),
+      ),
+
+      listTileTheme: const ListTileThemeData(
+        textColor: textPrimaryLight,
+        iconColor: textSecondaryLight,
+        tileColor: cardLight,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(8)),
+        ),
+      ),
+
+      dividerTheme: DividerThemeData(
+        color: textTertiaryLight.withValues(alpha: 0.3),
+        thickness: 1,
+      ),
+
+      textTheme: const TextTheme(
+        displayLarge: TextStyle(
+          color: textPrimaryLight,
+          fontSize: 32,
+          fontWeight: FontWeight.bold,
+        ),
+        displayMedium: TextStyle(
+          color: textPrimaryLight,
+          fontSize: 28,
+          fontWeight: FontWeight.bold,
+        ),
+        displaySmall: TextStyle(
+          color: textPrimaryLight,
+          fontSize: 24,
+          fontWeight: FontWeight.w600,
+        ),
+        headlineLarge: TextStyle(
+          color: textPrimaryLight,
+          fontSize: 22,
+          fontWeight: FontWeight.w600,
+        ),
+        headlineMedium: TextStyle(
+          color: textPrimaryLight,
+          fontSize: 20,
+          fontWeight: FontWeight.w600,
+        ),
+        headlineSmall: TextStyle(
+          color: textPrimaryLight,
+          fontSize: 18,
+          fontWeight: FontWeight.w600,
+        ),
+        titleLarge: TextStyle(
+          color: textPrimaryLight,
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+        ),
+        titleMedium: TextStyle(
+          color: textPrimaryLight,
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
+        ),
+        titleSmall: TextStyle(
+          color: textSecondaryLight,
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+        ),
+        bodyLarge: TextStyle(
+          color: textPrimaryLight,
+          fontSize: 16,
+          fontWeight: FontWeight.normal,
+        ),
+        bodyMedium: TextStyle(
+          color: textPrimaryLight,
+          fontSize: 14,
+          fontWeight: FontWeight.normal,
+        ),
+        bodySmall: TextStyle(
+          color: textSecondaryLight,
+          fontSize: 12,
+          fontWeight: FontWeight.normal,
+        ),
+        labelLarge: TextStyle(
+          color: textPrimaryLight,
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
+        ),
+        labelMedium: TextStyle(
+          color: textSecondaryLight,
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+        ),
+        labelSmall: TextStyle(
+          color: textTertiaryLight,
+          fontSize: 10,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+    );
+  }
+
   // Custom methods for status colors
   static Color getStatusColor(String status) {
     switch (status.toLowerCase()) {

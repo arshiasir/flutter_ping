@@ -7,10 +7,12 @@ import 'app/data/services/network_service.dart';
 import 'app/data/services/flutter_service.dart';
 import 'app/data/services/android_service.dart';
 import 'app/data/services/version_service.dart';
+import 'app/data/services/theme_service.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   // Initialize services
-  _initializeServices();
+  await _initializeServices();
 
   runApp(const FlutterPingApp());
 
@@ -25,12 +27,16 @@ void main() {
   });
 }
 
-void _initializeServices() {
+Future<void> _initializeServices() async {
   // Register services with GetX dependency injection
   Get.put(NetworkService(), permanent: true);
   Get.put(FlutterService(), permanent: true);
   Get.put(AndroidService(), permanent: true);
   Get.put(VersionService(), permanent: true);
+  await Get.putAsync<ThemeService>(
+    () async => await ThemeService().init(),
+    permanent: true,
+  );
 }
 
 class FlutterPingApp extends StatelessWidget {
@@ -38,14 +44,19 @@ class FlutterPingApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GetMaterialApp(
-      title: 'Flutter Ping',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.darkTheme,
-      initialRoute: AppPages.initial,
-      getPages: AppPages.routes,
-      defaultTransition: Transition.cupertino,
-      transitionDuration: const Duration(milliseconds: 300),
+    final ThemeService themeService = Get.find<ThemeService>();
+    return Obx(
+      () => GetMaterialApp(
+        title: 'Flutter Ping',
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.lightTheme,
+        darkTheme: AppTheme.darkTheme,
+        themeMode: themeService.themeMode.value,
+        initialRoute: AppPages.initial,
+        getPages: AppPages.routes,
+        defaultTransition: Transition.cupertino,
+        transitionDuration: const Duration(milliseconds: 300),
+      ),
     );
   }
 }

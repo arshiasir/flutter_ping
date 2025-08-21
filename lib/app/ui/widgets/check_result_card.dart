@@ -67,7 +67,7 @@ class CheckResultCard extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: AppTheme.elevatedSurface,
+                color: Get.theme.colorScheme.surface,
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
                   color: AppTheme.textTertiary.withValues(alpha: 0.3),
@@ -88,8 +88,8 @@ class CheckResultCard extends StatelessWidget {
                   icon: const Icon(Icons.copy, size: 16),
                   label: const Text('Copy Details'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.elevatedSurface,
-                    foregroundColor: AppTheme.textSecondary,
+                    backgroundColor: Get.theme.colorScheme.surface,
+                    foregroundColor: Get.theme.colorScheme.onSurface,
                     elevation: 0,
                   ),
                 ),

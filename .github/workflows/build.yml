@@ -12,7 +12,7 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-latest, macos-latest]
       fail-fast: false  # Continue other jobs even if one fails
     runs-on: ${{ matrix.os }}
 
@@ -36,79 +36,9 @@ jobs:
             flutter build linux --release
           elif [[ "${{ matrix.os }}" == "macos-latest" ]]; then
             flutter build macos --release
-          else
-            flutter build windows --release
           fi
 
       # Package per-OS native installer
-      - name: Package Windows .exe installer
-        if: matrix.os == 'windows-latest'
-        shell: pwsh
-        run: |
-          choco install nsis -y
-          New-Item -ItemType Directory -Force -Path installers | Out-Null
-          $releaseDir = "build/windows/x64/runner/Release"
-          if (!(Test-Path $releaseDir)) { $releaseDir = "build/windows/runner/Release" }
-          if (!(Test-Path "$releaseDir/flutter_ping.exe")) { throw "flutter_ping.exe not found in $releaseDir" }
-
-          # Prepare payload directory for NSIS to include
-          New-Item -ItemType Directory -Force -Path payload_win | Out-Null
-          Copy-Item -Recurse -Force "$releaseDir/*" "payload_win/"
-
-          $nsis = @'
-          !define APPNAME "Flutter Ping"
-          !define COMPANYNAME "Your Company"
-          !define VERSIONMAJOR 1
-          !define VERSIONMINOR 0
-          !define VERSIONBUILD 0
-
-          RequestExecutionLevel admin
-          InstallDir "$PROGRAMFILES\${APPNAME}"
-
-          !include "MUI2.nsh"
-
-          Name "${APPNAME}"
-          OutFile "flutter-ping-windows-installer.exe"
-
-          !define MUI_ABORTWARNING
-
-          !insertmacro MUI_PAGE_WELCOME
-          !insertmacro MUI_PAGE_DIRECTORY
-          !insertmacro MUI_PAGE_INSTFILES
-          !insertmacro MUI_PAGE_FINISH
-
-          !insertmacro MUI_UNPAGE_CONFIRM
-          !insertmacro MUI_UNPAGE_INSTFILES
-
-          !insertmacro MUI_LANGUAGE "English"
-
-          Section "MainApplication" SEC_ID
-            SetOutPath "$INSTDIR"
-            File /r "payload_win\\*.*"
-            WriteUninstaller "$INSTDIR\\uninstall.exe"
-            CreateDirectory "$SMPROGRAMS\\${APPNAME}"
-            CreateShortCut "$SMPROGRAMS\\${APPNAME}\\${APPNAME}.lnk" "$INSTDIR\\flutter_ping.exe"
-            CreateShortCut "$SMPROGRAMS\\${APPNAME}\\Uninstall.lnk" "$INSTDIR\\uninstall.exe"
-          SectionEnd
-
-          Section "Uninstall"
-            Delete "$INSTDIR\\uninstall.exe"
-            RMDir /r "$INSTDIR"
-            Delete "$SMPROGRAMS\\${APPNAME}\\${APPNAME}.lnk"
-            Delete "$SMPROGRAMS\\${APPNAME}\\Uninstall.lnk"
-            RMDir "$SMPROGRAMS\\${APPNAME}"
-          SectionEnd
-          '@
-          Set-Content -Path installer.nsi -Value $nsis -NoNewline
-          & "C:\Program Files (x86)\NSIS\makensis.exe" installer.nsi | Write-Output
-          Move-Item -Path flutter-ping-windows-installer.exe -Destination installers/ -Force
-
-      - name: Upload Windows installer
-        if: matrix.os == 'windows-latest'
-        uses: actions/upload-artifact@v4
-        with:
-          name: windows-installer
-          path: installers/flutter-ping-windows-installer.exe
 
       - name: Package Linux .deb installer
         if: matrix.os == 'ubuntu-latest'
@@ -204,7 +134,6 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            dist/windows-installer/*
             dist/linux-installer/*
             dist/macos-installer/*
           draft: false
